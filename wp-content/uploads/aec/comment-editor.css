@@ -1,0 +1,540 @@
+
+* {
+
+	margin:0;
+
+	padding:0;
+
+	font-weight: normal;
+
+	font-family: "Lucida Grande","Lucida Sans Unicode",Tahoma,Verdana,sans-serif;
+
+}
+
+img { border: 0; }
+
+/* Comment Header */ 
+
+#comment-edit-header {
+
+		background-color: #464646;
+
+		height: 46px;
+
+		text-align: center;
+
+}
+
+#title {
+
+		font-family: Georgia, "Times New Roman", Times, serif;
+
+		font-size: 20px;
+
+		padding-top: 10px;
+
+		color: #FFF;
+
+}
+
+#title a, #title a:hover {
+
+		color: #FFF;
+
+		text-decoration: none;
+
+}
+
+#title a:hover { 
+
+		text-decoration: underline;
+
+}
+
+/* Toggle Box Stuff - Conveniently lifted from WP Admin StyleSheet */
+
+#comment-options {
+
+		border-color:#EBEBEB rgb(204, 204, 204) rgb(204, 204, 204) rgb(235, 235, 235);
+
+}
+
+#comment-options {
+
+		margin: 10px 8px 10px 20px;
+
+		padding:2px;
+
+}
+
+#comment-options h3 {
+
+		font-size: 14px;
+
+		font-weight: bold;
+
+		padding: 9px;
+
+		cursor: pointer;
+
+		background-color: #EAF3FA;
+
+}
+
+/*Expand icon*/
+
+#edit_options {
+
+		margin-left: 10px;
+
+}
+
+.expand, .retract {
+
+		width: 32px;
+
+    	height: 32px;
+
+    	display:block;
+
+    	float:left;
+
+    	margin-left: 5px;
+
+}
+
+.expand {
+
+		background-image: url('/wp-content/plugins/wp-ajax-edit-comments/images/full_screen.png');
+
+}
+
+.retract { 
+
+		background-image: url('/wp-content/plugins/wp-ajax-edit-comments/images/full_screen_close.png');
+
+}
+
+
+
+/* Forms */
+
+div .form {
+
+		clear: both;
+
+		margin-left: 10px;
+
+		margin-top: 10px;
+
+}
+
+table.inputs {
+
+		border: 0;
+}
+
+#buttons div {
+
+		float: left;
+
+		margin-right: 5px;
+
+		margin-top: 5px;
+
+		margin-bottom: 5px;
+
+}
+
+input.error,textarea.error {
+
+		background-color: #FFEBE8;
+
+		border: 1px solid #CC0000;
+
+}
+
+/*Status */
+
+#status, #close-option { 
+
+		display: none;
+
+}
+
+#status {
+
+		clear: both;
+
+		margin: 0 10px;
+
+		padding: 5px;
+
+}
+
+#status.error, #status.success {
+
+		display: block;
+
+}
+
+#status.error {
+
+		background-color: #FFEBE8;
+
+		border: 1px solid #CC0000;
+
+}
+
+#status a, #status a:hover {
+
+		color:#0000FF;
+
+}
+
+#status.success {
+
+		background-color: #FFFFE0;
+
+		border: 1px solid #E6DB55;
+
+}
+
+a.next {
+
+		display: block;
+
+		font-size: 12px;
+
+		padding: 2px 0px;
+
+		padding-right: 20px;
+
+		float: right;
+
+		margin-left: 10px;
+
+		text-decoration: none;
+
+}
+
+a.previous {
+
+		display: block;
+
+		font-size: 12px;
+
+		padding: 2px 0px;
+
+		padding-left: 20px;
+
+		float: left;
+
+		margin-right: 10px;
+
+		text-decoration: none;
+
+}
+
+.previcon {
+
+		display:block;
+
+    	margin-right: 4px;
+
+    	float: left;
+
+		width:16px;
+
+    	height:16px;
+
+    	background:url(/wp-content/plugins/wp-ajax-edit-comments/images/themes/circular/sprite.png) 0px 0px no-repeat;
+
+}
+
+.nexticon {
+
+		display:block;
+
+    	margin-left: 4px;
+
+    	float: right;
+
+		width:16px;
+
+    	height:16px;
+
+    	background:url(/wp-content/plugins/wp-ajax-edit-comments/images/themes/circular/sprite.png) -16px 0px no-repeat;
+
+}
+
+a.hidden, div.hidden, body.hidden {
+
+		display: none;
+
+}
+
+.loading { 
+
+		display: block;
+
+		width: 35px;
+
+		height: 35px;
+
+		background: url(/wp-content/plugins/wp-ajax-edit-comments/images/loading.gif);
+
+}
+
+#post_buttons { 
+
+		clear: both;
+
+}
+/* AtD error styles */
+
+.hiddenSpellError
+{
+   border-bottom: 2px solid red;
+   cursor: default;
+}
+
+.hiddenGrammarError
+{
+   border-bottom: 2px solid green;
+   cursor: default;
+}
+
+.hiddenSuggestion
+{
+   border-bottom: 2px solid blue;
+   cursor: default;
+}
+
+/* */
+.AtD_proofread_button, .AtD_edit_button { 
+	width: 32px;
+	height: 32px;
+	display:block;
+	float:left;
+}
+#commentform .AtD_proofread_button, #commentform .AtD_edit_button{
+
+}
+.AtD_proofread_button 
+{
+   background-image: url('/wp-content/plugins/wp-ajax-edit-comments/css/images/writing.png');
+}
+
+.AtD_edit_button 
+{
+   background-image: url('/wp-content/plugins/wp-ajax-edit-comments/css/images/editing.png');
+}
+
+/* Menu styles derived from:
+ * jquery.spellchecker.js - a simple jQuery Spell Checker
+ * Copyright (c) 2008 Richard Willis
+ * MIT license  : http://www.opensource.org/licenses/mit-license.php
+ * Project      : http://jquery-spellchecker.googlecode.com
+ */
+
+#suggestmenu 
+{
+   background: #fff;
+   position: absolute;
+   display: none;
+   z-index: 9999;
+   overflow: none;
+   margin-top: 1px;
+   text-align: left;
+   font-size: 12px;
+   font-family: Tahoma, Verdana, Arial, Helvetica;
+}
+
+#suggestmenu strong 
+{
+   background: #ddd;
+   font-weight: bold;
+   padding:3px 6px 3px 6px;    
+   display:block;               
+   border:1px solid #ccc;
+   color: black;
+}
+
+#suggestmenu em 
+{
+   text-align:center;    
+   padding:3px 6px 3px 6px;    
+   display:block;               
+   border-top:1px solid #ccc;
+   border-left:1px solid #ccc;
+}
+
+#suggestmenu a, #suggestmenu a:visited 
+{
+   background: #fff;
+   border-left:1px solid #bbb;
+   border-right:1px solid #bbb;
+   padding:3px 6px 3px 6px;
+   display:block;
+   margin:0px;
+   text-decoration:none;
+   color:#333;
+   outline:none
+}
+
+#suggestmenu a.first, #suggestmenu a.first:visited 
+{
+   border-top:1px solid #ccc
+}
+
+.spell_sep_bottom 
+{
+   border-bottom: 1px solid #ccc;
+}
+
+.spell_sep_top 
+{
+   border-top: 1px solid #ccc;
+}
+
+#suggestmenu a:hover 
+{
+   color:#000;
+   background: #dbecf3
+}
+
+#suggestmenu .foot 
+{
+   border-top:1px solid #ddd;
+   background:#fff
+}
+
+#suggestmenu .foot a, #suggestmenu .foot a:visited 
+{
+   outline:none
+}
+/* root element for tabs  */
+ul.tabs { 
+	list-style:none; 
+	margin:0 !important; 
+	padding:0;	
+	border-bottom:1px solid #666;	
+	height:30px;
+}
+
+/* single tab */
+ul.tabs li { 
+	float:left;	 
+	text-indent:0;
+	padding:0;
+	margin:0 !important;
+	list-style-image:none !important; 
+}
+
+/* link inside the tab. uses a background image */
+ul.tabs a { 
+	background: url(/wp-content/plugins/wp-ajax-edit-comments/css/images/blue.png) no-repeat -420px 0;
+	font-size:11px;
+	display:block;
+	height: 30px;  
+	line-height:30px;
+	width: 134px;
+	text-align:center;	
+	text-decoration:none;
+	color:#333;
+	padding:0px;
+	margin:0px;	
+	position:relative;
+	top:1px;
+}
+
+ul.tabs a:active {
+	outline:none;		
+}
+
+/* when mouse enters the tab move the background image */
+ul.tabs a:hover {
+	background-position: -420px -31px;	
+	color:#fff;	
+}
+
+/* active tab uses a class name "current". it's highlight is also done by moving the background image. */
+ul.tabs a.current, ul.tabs a.current:hover, ul.tabs li.current a {
+	background-position: -420px -62px;		
+	cursor:default !important; 
+	color:#000 !important;
+}
+
+/* Different widths for tabs: use a class name: w1, w2, w3 or w2 */
+
+
+/* width 1 */
+ul.tabs a.s 			{ background-position: -553px 0; width:81px; }
+ul.tabs a.s:hover 	{ background-position: -553px -31px; }
+ul.tabs a.s.current  { background-position: -553px -62px; }
+
+/* width 2 */
+ul.tabs a.l 			{ background-position: -248px -0px; width:174px; }
+ul.tabs a.l:hover 	{ background-position: -248px -31px; }
+ul.tabs a.l.current  { background-position: -248px -62px; }
+
+
+/* width 3 */
+ul.tabs a.xl 			{ background-position: 0 -0px; width:248px; }
+ul.tabs a.xl:hover 	{ background-position: 0 -31px; }
+ul.tabs a.xl.current { background-position: 0 -62px; }
+
+
+/* initially all panes are hidden */ 
+div.panes div.pane {
+	display:none;		
+}
+
+div.wrap {
+	width:99%;
+	margin-bottom:40px;
+}
+
+.wrap .pane  {	
+	display:none;		
+	padding:10px;
+	border:1px solid #999;
+	border-top:0;
+	color:#456;	
+	
+	_background-image:none;
+}
+
+.wrap .pane p {
+	
+}
+/*Expand icon*/
+#aec_edit_options {
+	position: relative;
+	z-index: 2;
+	margin-left: 10px;
+	height: 32px;
+}
+.aec_expand, .aec_retract {
+	width: 32px;
+    height: 32px;
+    display:block;
+    float:left;
+    margin-left: 5px;
+}
+.aec_retract { 
+	background-image: url('/wp-content/plugins/wp-ajax-edit-comments/css/images/full_screen_close.png');
+}
+.aec_expand {
+	background-image: url('/wp-content/plugins/wp-ajax-edit-comments/css/images/full_screen.png');
+}
+/*popup box*/
+#aec-popup { padding: 0 20px; }
+#aec-popup p {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 22px;
+}
+#aec-popup textarea { width: 100%; padding: 5px; font-size: 18px; font-family: Verdana, Arial, Helvetica, sans-serif; }
+#aec-popup textarea, #aec-popup input { border: 1px solid #000;}
+#aec-popup input { padding: 5px; margin-top: 15px; margin-right: 10px; }
