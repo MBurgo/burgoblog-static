@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { readFile, writeFile, mkdir, readdir, stat } from "node:fs/promises";
-import { existsSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import * as cheerio from "cheerio";
@@ -52,6 +52,46 @@ turndown.addRule("blockquoteWithCite", {
 
 const failures = [];
 
+// Per-run record of dropped embeds — every position where we detected an
+// embed pattern but couldn't extract a usable URL. Used to:
+//   1. Insert an HTML comment placeholder at the drop site, so future
+//      readers can grep the corpus.
+//   2. Emit a per-post audit section in EXTRACTION_REPORT.md.
+const droppedByPost = [];
+let currentDropContext = null;
+
+function snippetFor(html) {
+  const cleaned = String(html || "").replace(/\s+/g, " ").replace(/-->/g, "--&gt;").trim();
+  return cleaned.length > 80 ? cleaned.slice(0, 77) + "..." : cleaned;
+}
+
+function encodeAttr(s) {
+  return String(s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+}
+
+// Records a dropped embed at the current post's context and returns the HTML
+// placeholder to insert in the source. The placeholder is a custom element
+// that the Turndown rule below rewrites to an HTML comment in the output
+// Markdown — that way `grep "<!-- embed dropped:"` works on the corpus.
+function recordDrop(type, rawSnippet) {
+  const snippet = snippetFor(rawSnippet);
+  if (currentDropContext) currentDropContext.drops.push({ type, snippet });
+  // Turndown's HTML parser strips custom elements and empty <span>s, so wrap
+  // the marker in a <span> containing a non-empty placeholder character. The
+  // Turndown rule below replaces the whole element with an HTML comment.
+  return `<span class="embed-drop-marker" data-type="${encodeAttr(type)}" data-snippet="${encodeAttr(snippet)}">·</span>`;
+}
+
+turndown.addRule("embedDrop", {
+  filter: (node) =>
+    node.nodeName === "SPAN" && (node.getAttribute("class") || "").includes("embed-drop-marker"),
+  replacement: (_content, node) => {
+    const type = node.getAttribute("data-type") || "unknown";
+    const snippet = node.getAttribute("data-snippet") || "";
+    return `\n\n<!-- embed dropped: ${type} ${snippet} -->\n\n`;
+  },
+});
+
 // Running tally of embed conversions across the run, broken down by source
 // format, for the EXTRACTION_REPORT.
 const embedStats = {
@@ -63,6 +103,7 @@ const embedStats = {
   bandcamp_flash: 0, // bandcamp EmbeddedPlayer.swf
   kept_existing_iframe: 0, // iframe that was already present
   unrecoverable_flash: 0, // dead Flash services (BBC, MTV.it, MySpace, etc.)
+  unparsable_shortcode: 0, // [youtube]…[/youtube] etc. where the ID couldn't be parsed
 };
 
 function parsePermalink(url) {
@@ -161,7 +202,10 @@ function expandShortcodes(html) {
   // Paired form: [youtube]ID-or-URL[/youtube]
   out = out.replace(/\[youtube\]\s*([^\[\s]+)\s*\[\/youtube\]/gi, (full, raw) => {
     const id = detectYouTubeId(raw) || (/^[A-Za-z0-9_-]{6,}$/.test(raw) ? raw : null);
-    if (!id) return full;
+    if (!id) {
+      embedStats.unparsable_shortcode++;
+      return recordDrop("youtube-shortcode", full);
+    }
     embedStats.youtube_shortcode_paired++;
     return youtubeIframe(id);
   });
@@ -169,7 +213,10 @@ function expandShortcodes(html) {
   // Attribute form: [youtube=URL] or [youtube URL] or [youtube id=XYZ]
   out = out.replace(/\[youtube[=\s]([^\]]+)\]/gi, (full, raw) => {
     const id = detectYouTubeId(raw);
-    if (!id) return full;
+    if (!id) {
+      embedStats.unparsable_shortcode++;
+      return recordDrop("youtube-shortcode", full);
+    }
     embedStats.youtube_shortcode_attr++;
     return youtubeIframe(id);
   });
@@ -220,12 +267,14 @@ function convertFlashEmbeds($scope, $) {
       // Modern bandcamp embed URL strips the .swf suffix and uses /EmbeddedPlayer/.
       replacement = bandcampIframe(m[1].replace(/\/$/, "") + "/");
       embedStats.bandcamp_flash++;
-    } else if (decoded) {
-      // Recognisable Flash but service is dead — leave a visible note so the
-      // future static site doesn't silently lose evidence the embed existed.
+    } else {
+      // Flash markup we can't map to a live service. Drop as a Markdown
+      // comment recording the original snippet so future review can decide
+      // whether anything's worth manually rescuing.
       embedStats.unrecoverable_flash++;
-      const label = decoded.length > 80 ? decoded.slice(0, 77) + "…" : decoded;
-      replacement = `<p><em>[Flash embed — unrecoverable: ${label}]</em></p>`;
+      const original = decoded || $.html($el) || "";
+      const type = el.tagName === "embed" ? "flash-embed" : "flash-object";
+      replacement = recordDrop(type, original);
     }
 
     if (replacement) {
@@ -246,7 +295,7 @@ function cleanBodyHtml($body, $) {
   $body.find("p").each((_, el) => {
     const $p = $(el);
     const text = $p.text().replace(/ |\s/g, "");
-    if (!text && $p.find("img, iframe, video, audio, embed, object").length === 0) {
+    if (!text && $p.find("img, iframe, video, audio, embed, object, span.embed-drop-marker").length === 0) {
       $p.remove();
     }
   });
@@ -273,17 +322,27 @@ function htmlToMarkdown(html) {
   return md.replace(/\n{3,}/g, "\n\n").trim() + "\n";
 }
 
-function extractTaxonomyFromArticleClass(articleClass) {
+function extractTaxonomies($, articleClass) {
   const categories = [];
-  const tags = [];
   for (const cls of articleClass.split(/\s+/)) {
-    if (cls.startsWith("category-")) {
-      categories.push(cls.slice("category-".length));
-    } else if (cls.startsWith("tag-")) {
-      tags.push(cls.slice("tag-".length));
+    if (cls.startsWith("category-")) categories.push(cls.slice("category-".length));
+  }
+  // Tags from the article class are unreliable for numeric tag slugs (WordPress
+  // emits `tag-{ID}` rather than `tag-{slug}` for those). The post-meta links
+  // marked with rel="tag" carry the canonical URL slug, so prefer those.
+  const tagSlugs = new Set();
+  $('article a[rel~="tag"]').each((_, a) => {
+    const href = $(a).attr("href") || "";
+    const m = href.match(/^\/tag\/([^/]+)\/?$/);
+    if (m) tagSlugs.add(decodeURIComponent(m[1]));
+  });
+  // Fallback: if the post somehow has no rel="tag" links, derive from class.
+  if (tagSlugs.size === 0) {
+    for (const cls of articleClass.split(/\s+/)) {
+      if (cls.startsWith("tag-")) tagSlugs.add(cls.slice("tag-".length));
     }
   }
-  return { categories, tags };
+  return { categories, tags: [...tagSlugs] };
 }
 
 function normalizeImageSrc(src) {
@@ -334,23 +393,44 @@ function extractTitle($) {
   return decodeEntities(og.replace(/ \| Burgo's Music Blog$/, "").trim());
 }
 
+function stripNonAscii(s) {
+  return s.replace(/[^\x00-\x7F]/g, "").replace(/-{2,}/g, "-").replace(/^-|-$/g, "");
+}
+
 function resolvePostFile(meta) {
   const baseDir = path.join(ROOT, meta.year, meta.month, meta.day);
   // First try the decoded slug exactly.
   let candidate = path.join(baseDir, meta.slug, "index.html");
   if (existsSync(candidate)) return candidate;
-  // The static mirror dropped some non-ASCII characters from directory names
-  // (e.g. ellipsis, curly apostrophes). Try stripping non-ASCII and collapsing
-  // any double-hyphens that result.
-  const stripped = meta.slug
-    .replace(/[^\x00-\x7F]/g, "")
-    .replace(/-{2,}/g, "-");
-  if (stripped !== meta.slug) {
-    candidate = path.join(baseDir, stripped, "index.html");
+  // The static mirror inconsistently kept or stripped non-ASCII characters
+  // from directory names (curly quotes, ellipses, en-dashes). Try stripping
+  // non-ASCII from the sitemap slug.
+  const strippedTarget = stripNonAscii(meta.slug);
+  if (strippedTarget !== meta.slug) {
+    candidate = path.join(baseDir, strippedTarget, "index.html");
     if (existsSync(candidate)) {
-      meta.slug = stripped;
+      meta.slug = strippedTarget;
       return candidate;
     }
+  }
+  // Last-resort fuzzy match: list the day directory and find a slug whose
+  // stripped-ASCII form matches our stripped target. Handles cases where the
+  // mirror dropped *some but not all* non-ASCII characters from the original.
+  try {
+    const dirs = readdirSync(baseDir, { withFileTypes: true });
+    const matches = dirs
+      .filter((d) => d.isDirectory())
+      .map((d) => d.name)
+      .filter((name) => stripNonAscii(name) === strippedTarget);
+    if (matches.length === 1) {
+      candidate = path.join(baseDir, matches[0], "index.html");
+      if (existsSync(candidate)) {
+        meta.slug = matches[0];
+        return candidate;
+      }
+    }
+  } catch {
+    // baseDir doesn't exist — fall through.
   }
   return null;
 }
@@ -366,6 +446,7 @@ async function extractPost(url) {
     failures.push({ url, reason: "index.html not found for " + url });
     return null;
   }
+  currentDropContext = { url, year: meta.year, drops: [] };
   const html = await readFile(filePath, "utf8");
   const $ = cheerio.load(html, { decodeEntities: false });
 
@@ -377,7 +458,7 @@ async function extractPost(url) {
 
   const title = extractTitle($);
   const articleClass = $article.attr("class") || "";
-  const { categories, tags } = extractTaxonomyFromArticleClass(articleClass);
+  const { categories, tags } = extractTaxonomies($, articleClass);
   const author = extractAuthor($);
   const featured_image = extractFeaturedImage($);
   const comment_count = extractCommentCount($);
@@ -478,6 +559,16 @@ async function extractPost(url) {
     );
   }
 
+  if (currentDropContext.drops.length > 0) {
+    droppedByPost.push({
+      url,
+      year: meta.year,
+      date: `${meta.year}-${meta.month}-${meta.day}`,
+      drops: currentDropContext.drops,
+    });
+  }
+  currentDropContext = null;
+
   return {
     url,
     slug: meta.slug,
@@ -544,6 +635,111 @@ async function extractTaxonomyDisplayName(kind, slug) {
   const spans = [...inner.matchAll(/<span(?:\s[^>]*)?>([\s\S]*?)<\/span>/g)];
   if (spans.length === 0) return slug;
   return decodeEntities(spans[spans.length - 1][1].trim());
+}
+
+function summarizeDropTypes(drops) {
+  const counts = new Map();
+  for (const d of drops) counts.set(d.type, (counts.get(d.type) || 0) + 1);
+  return [...counts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .map(([type, n]) => `${type}×${n}`)
+    .join(", ");
+}
+
+async function writeExtractionReport({
+  totalSitemapUrls,
+  extractedPosts,
+  pageResults,
+  taxResult,
+  postSummaries,
+}) {
+  const totalDrops = droppedByPost.reduce((n, p) => n + p.drops.length, 0);
+  const totalComments = postSummaries.reduce((n, p) => n + (p.comments || 0), 0);
+  const postsWithComments = postSummaries.filter((p) => (p.comments || 0) > 0).length;
+
+  const lines = [];
+  lines.push("# Burgoblog content extraction report");
+  lines.push("");
+  lines.push("Faithful one-shot migration of the WordPress static mirror into Markdown + JSON.");
+  lines.push(`Generated by \`scripts/extract.mjs\` against \`post-sitemap.xml\`.`);
+  lines.push("");
+  lines.push("## Totals");
+  lines.push("");
+  lines.push(`- URLs in \`post-sitemap.xml\`: **${totalSitemapUrls}** (the lone \`/\` entry, the homepage, is skipped).`);
+  lines.push(`- Posts extracted: **${extractedPosts}**`);
+  lines.push(`- Static pages extracted: **${pageResults.length}**`);
+  lines.push(`- Comments extracted: **${totalComments}** across **${postsWithComments}** posts`);
+  if (taxResult) {
+    lines.push(`- Tags: **${taxResult.tagCount}** · Categories: **${taxResult.catCount}**`);
+  }
+  lines.push(`- Extraction failures: **${failures.length}**`);
+  lines.push("");
+
+  lines.push("## Embed recovery");
+  lines.push("");
+  lines.push("Pre-2010 posts used Flash `<object>`/`<embed>` markup that the WordPress export preserved verbatim. The extractor converts each known service to a modern `<iframe>` in both post bodies and comment markdown; dead-service Flash and unparsable shortcodes are dropped to an HTML comment at the drop site (greppable via `<!-- embed dropped:`).");
+  lines.push("");
+  lines.push("| Source format | Count |");
+  lines.push("|---|---:|");
+  const embedRows = [
+    ["YouTube Flash `<object>/<embed>` → iframe", embedStats.youtube_flash],
+    ["Vimeo Flash `moogaloop.swf` → iframe", embedStats.vimeo_flash],
+    ["Dailymotion Flash → iframe", embedStats.dailymotion_flash],
+    ["Bandcamp Flash → iframe", embedStats.bandcamp_flash],
+    ["`[youtube=URL]` attr shortcode → iframe", embedStats.youtube_shortcode_attr],
+    ["`[youtube]ID[/youtube]` paired shortcode → iframe", embedStats.youtube_shortcode_paired],
+    ["Existing `<iframe>` (2010+) kept verbatim", embedStats.kept_existing_iframe],
+    ["Unrecoverable Flash dropped to comment", embedStats.unrecoverable_flash],
+    ["Unparsable shortcode dropped to comment", embedStats.unparsable_shortcode],
+  ];
+  for (const [label, n] of embedRows) lines.push(`| ${label} | ${n} |`);
+  lines.push("");
+
+  lines.push("## Dropped-embed audit");
+  lines.push("");
+  if (totalDrops === 0) {
+    lines.push("No embeds were dropped.");
+  } else {
+    lines.push(`${totalDrops} dropped embeds across ${droppedByPost.length} posts. Each drop site has a \`<!-- embed dropped: <type> <80-char-snippet> -->\` comment in the post Markdown so the corpus is greppable. Posts grouped by year, sorted oldest-first within each year.`);
+    lines.push("");
+    const byYear = new Map();
+    for (const p of droppedByPost) {
+      if (!byYear.has(p.year)) byYear.set(p.year, []);
+      byYear.get(p.year).push(p);
+    }
+    const years = [...byYear.keys()].sort();
+    for (const year of years) {
+      const posts = byYear.get(year).sort((a, b) => a.url.localeCompare(b.url));
+      const yearTotal = posts.reduce((n, p) => n + p.drops.length, 0);
+      lines.push(`### ${year} — ${posts.length} post${posts.length === 1 ? "" : "s"}, ${yearTotal} drop${yearTotal === 1 ? "" : "s"}`);
+      lines.push("");
+      for (const p of posts) {
+        lines.push(`- \`${p.url}\` — ${p.drops.length} (${summarizeDropTypes(p.drops)})`);
+      }
+      lines.push("");
+    }
+  }
+
+  lines.push("## Failures");
+  lines.push("");
+  if (failures.length === 0) {
+    lines.push("No failures.");
+  } else {
+    for (const f of failures) lines.push(`- \`${f.url}\` — ${f.reason}`);
+  }
+  lines.push("");
+
+  lines.push("## Decisions when the source was ambiguous");
+  lines.push("");
+  lines.push("- **Author** — every post in the sitemap is authored by Burgo (verified by author archive: no posts reference `/author/snoskred/`, `/author/admin/`, `/author/wpmaster/`, or `/author/maint/`). The script still reads `<meta name=\"author\">` per-post in case any future re-extraction needs to capture other authors.");
+  lines.push("- **Comment threading** — flat array with `reply_to: null` for every entry, per the brief. WordPress comment nesting metadata isn't reliably present in the static mirror.");
+  lines.push("- **Featured image** — sourced from `<meta property=\"og:image\">`; falls back to the first image in `.entry-content` under `/wp-content/uploads/` if og:image is missing.");
+  lines.push("- **Image and iframe `src`** — LiteSpeed Cache lazy-loaded these to `about:blank` with the real URL in `data-litespeed-src`. The extractor restores the real URL.");
+  lines.push("- **Unicode slugs** — several sitemap URLs percent-encode non-ASCII (`%e2%80%93` en-dash, `%e2%80%99` curly apostrophe, `%e2%80%a6` ellipsis, `%e2%80%98` open quote). The on-disk directories inconsistently preserve, strip, or partially strip the UTF-8 characters. The resolver tries the decoded slug first, then a fully ASCII-stripped fallback, and finally a fuzzy directory scan that matches against the day folder by ASCII-canonical form.");
+  lines.push("- **Dropped embeds** — see audit above. Format is HTML-comment-as-Markdown for greppability; no visible noise in rendered output.");
+  lines.push("");
+
+  await writeFile(path.join(CONTENT, "EXTRACTION_REPORT.md"), lines.join("\n"));
 }
 
 async function buildTaxonomies(postSummaries) {
@@ -628,6 +824,18 @@ async function main() {
     for (const f of failures) console.log(`  - ${f.url}: ${f.reason}`);
   } else {
     console.log("\nNo failures.");
+  }
+
+  // Write EXTRACTION_REPORT.md (only on a full run — sample mode skips it).
+  if (!SAMPLE_MODE && onlyUrls.size === 0) {
+    await writeExtractionReport({
+      totalSitemapUrls: allUrls.length,
+      extractedPosts: summaries.length,
+      pageResults,
+      taxResult,
+      postSummaries: summaries,
+    });
+    console.log("\nWrote content/EXTRACTION_REPORT.md");
   }
 
   // Persist a run summary for the report.
