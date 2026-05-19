@@ -52,10 +52,31 @@ turndown.addRule("blockquoteWithCite", {
 
 const failures = [];
 
+// Running tally of embed conversions across the run, broken down by source
+// format, for the EXTRACTION_REPORT.
+const embedStats = {
+  youtube_shortcode_attr: 0, // [youtube=URL]
+  youtube_shortcode_paired: 0, // [youtube]ID[/youtube]
+  youtube_flash: 0, // <object>/<embed> with youtube.com/v/{ID}
+  vimeo_flash: 0, // moogaloop.swf?clip_id={ID}
+  dailymotion_flash: 0, // dailymotion.com/swf/{ID}
+  bandcamp_flash: 0, // bandcamp EmbeddedPlayer.swf
+  kept_existing_iframe: 0, // iframe that was already present
+  unrecoverable_flash: 0, // dead Flash services (BBC, MTV.it, MySpace, etc.)
+};
+
 function parsePermalink(url) {
   const m = url.match(/^\/(\d{4})\/(\d{2})\/(\d{2})\/([^/]+)\/?$/);
   if (!m) return null;
-  return { year: m[1], month: m[2], day: m[3], slug: m[4] };
+  // The sitemap percent-encodes non-ASCII slug characters; the filesystem
+  // stores them as their decoded UTF-8 form. Decode so path lookups match.
+  let slug;
+  try {
+    slug = decodeURIComponent(m[4]);
+  } catch {
+    slug = m[4];
+  }
+  return { year: m[1], month: m[2], day: m[3], slug };
 }
 
 function decodeEntities(s) {
@@ -104,20 +125,117 @@ async function loadSitemapUrls() {
   return urls;
 }
 
-function expandYoutubeShortcodes(html) {
-  // [youtube=URL] or [youtube URL] or [youtube id=XYZ]
-  return html.replace(/\[youtube[=\s]([^\]]+)\]/gi, (full, raw) => {
-    let id = null;
-    const v = raw.match(/[?&]v=([A-Za-z0-9_-]{6,})/);
-    const youtuBe = raw.match(/youtu\.be\/([A-Za-z0-9_-]{6,})/);
-    const embedPath = raw.match(/youtube\.com\/embed\/([A-Za-z0-9_-]{6,})/);
-    const idAttr = raw.match(/^id=([A-Za-z0-9_-]{6,})/);
-    if (v) id = v[1];
-    else if (youtuBe) id = youtuBe[1];
-    else if (embedPath) id = embedPath[1];
-    else if (idAttr) id = idAttr[1];
+function youtubeIframe(id) {
+  return `<iframe width="560" height="315" src="https://www.youtube.com/embed/${id}" title="YouTube video" frameborder="0" allowfullscreen></iframe>`;
+}
+function vimeoIframe(id) {
+  return `<iframe width="560" height="315" src="https://player.vimeo.com/video/${id}" title="Vimeo video" frameborder="0" allowfullscreen></iframe>`;
+}
+function dailymotionIframe(id) {
+  return `<iframe width="560" height="315" src="https://www.dailymotion.com/embed/video/${id}" title="Dailymotion video" frameborder="0" allowfullscreen></iframe>`;
+}
+function bandcampIframe(opts) {
+  // opts is the raw query string after EmbeddedPlayer.swf/
+  return `<iframe style="border: 0; width: 100%; height: 120px;" src="https://bandcamp.com/EmbeddedPlayer/${opts}" seamless></iframe>`;
+}
+
+function detectYouTubeId(raw) {
+  if (!raw) return null;
+  const decoded = raw.replace(/&amp;/g, "&");
+  const v = decoded.match(/[?&]v=([A-Za-z0-9_-]{6,})/);
+  if (v) return v[1];
+  const youtuBe = decoded.match(/youtu\.be\/([A-Za-z0-9_-]{6,})/);
+  if (youtuBe) return youtuBe[1];
+  const embedPath = decoded.match(/youtube\.com\/embed\/([A-Za-z0-9_-]{6,})/);
+  if (embedPath) return embedPath[1];
+  const flashPath = decoded.match(/youtube\.com\/v\/([A-Za-z0-9_-]{6,})/);
+  if (flashPath) return flashPath[1];
+  const idAttr = decoded.match(/^id=([A-Za-z0-9_-]{6,})/);
+  if (idAttr) return idAttr[1];
+  return null;
+}
+
+function expandShortcodes(html) {
+  let out = html;
+
+  // Paired form: [youtube]ID-or-URL[/youtube]
+  out = out.replace(/\[youtube\]\s*([^\[\s]+)\s*\[\/youtube\]/gi, (full, raw) => {
+    const id = detectYouTubeId(raw) || (/^[A-Za-z0-9_-]{6,}$/.test(raw) ? raw : null);
     if (!id) return full;
-    return `<iframe width="560" height="315" src="https://www.youtube.com/embed/${id}" title="YouTube video" frameborder="0" allowfullscreen></iframe>`;
+    embedStats.youtube_shortcode_paired++;
+    return youtubeIframe(id);
+  });
+
+  // Attribute form: [youtube=URL] or [youtube URL] or [youtube id=XYZ]
+  out = out.replace(/\[youtube[=\s]([^\]]+)\]/gi, (full, raw) => {
+    const id = detectYouTubeId(raw);
+    if (!id) return full;
+    embedStats.youtube_shortcode_attr++;
+    return youtubeIframe(id);
+  });
+
+  return out;
+}
+
+// Walks the Cheerio tree, replacing Flash <object>/<embed> markup with modern
+// <iframe> embeds where the source service is still alive. Unrecoverable
+// Flash gets replaced with a Markdown-friendly note so we don't lose context.
+function convertFlashEmbeds($scope, $) {
+  // First pass: standalone <embed> tags and <embed> inside <object>.
+  $scope.find("object, embed").each((_, el) => {
+    if (!el.parent) return; // Already replaced this round.
+    const $el = $(el);
+    // If this <embed> sits inside an <object> that we'll handle separately, skip.
+    if (el.tagName === "embed" && $el.parent("object").length > 0) return;
+
+    // Gather candidate URLs from this node and its descendants.
+    const candidates = [];
+    if (el.tagName === "embed") {
+      candidates.push($el.attr("src"));
+    } else {
+      // <object data="..."> or contains <param name="movie" value="..."> or <embed src="...">.
+      candidates.push($el.attr("data"));
+      $el.find("param").each((_, p) => {
+        const $p = $(p);
+        const name = ($p.attr("name") || "").toLowerCase();
+        if (name === "movie" || name === "src") candidates.push($p.attr("value"));
+      });
+      $el.find("embed").each((_, e) => candidates.push($(e).attr("src")));
+    }
+    const url = candidates.find((u) => u && u.trim()) || "";
+    const decoded = url.replace(/&amp;/g, "&");
+    let replacement = null;
+
+    let m;
+    if ((m = decoded.match(/youtube\.com\/v\/([A-Za-z0-9_-]{6,})/))) {
+      replacement = youtubeIframe(m[1]);
+      embedStats.youtube_flash++;
+    } else if ((m = decoded.match(/vimeo\.com\/moogaloop\.swf\?clip_id=(\d+)/))) {
+      replacement = vimeoIframe(m[1]);
+      embedStats.vimeo_flash++;
+    } else if ((m = decoded.match(/dailymotion\.com\/swf\/([A-Za-z0-9]+)/))) {
+      replacement = dailymotionIframe(m[1]);
+      embedStats.dailymotion_flash++;
+    } else if ((m = decoded.match(/bandcamp\.com\/EmbeddedPlayer\.swf\/([^"'\s]+)/))) {
+      // Modern bandcamp embed URL strips the .swf suffix and uses /EmbeddedPlayer/.
+      replacement = bandcampIframe(m[1].replace(/\/$/, "") + "/");
+      embedStats.bandcamp_flash++;
+    } else if (decoded) {
+      // Recognisable Flash but service is dead — leave a visible note so the
+      // future static site doesn't silently lose evidence the embed existed.
+      embedStats.unrecoverable_flash++;
+      const label = decoded.length > 80 ? decoded.slice(0, 77) + "…" : decoded;
+      replacement = `<p><em>[Flash embed — unrecoverable: ${label}]</em></p>`;
+    }
+
+    if (replacement) {
+      $el.replaceWith(replacement);
+    }
+  });
+
+  // Also count any iframes that are already in the source — these survive as-is.
+  $scope.find("iframe").each(() => {
+    embedStats.kept_existing_iframe++;
   });
 }
 
@@ -148,8 +266,8 @@ function cleanBodyHtml($body, $) {
 }
 
 function htmlToMarkdown(html) {
-  // Expand [youtube=URL] shortcodes first.
-  const expanded = expandYoutubeShortcodes(html);
+  // Expand WordPress [youtube] shortcodes before parsing.
+  const expanded = expandShortcodes(html);
   const md = turndown.turndown(expanded);
   // Collapse 3+ blank lines to 2.
   return md.replace(/\n{3,}/g, "\n\n").trim() + "\n";
@@ -216,15 +334,36 @@ function extractTitle($) {
   return decodeEntities(og.replace(/ \| Burgo's Music Blog$/, "").trim());
 }
 
+function resolvePostFile(meta) {
+  const baseDir = path.join(ROOT, meta.year, meta.month, meta.day);
+  // First try the decoded slug exactly.
+  let candidate = path.join(baseDir, meta.slug, "index.html");
+  if (existsSync(candidate)) return candidate;
+  // The static mirror dropped some non-ASCII characters from directory names
+  // (e.g. ellipsis, curly apostrophes). Try stripping non-ASCII and collapsing
+  // any double-hyphens that result.
+  const stripped = meta.slug
+    .replace(/[^\x00-\x7F]/g, "")
+    .replace(/-{2,}/g, "-");
+  if (stripped !== meta.slug) {
+    candidate = path.join(baseDir, stripped, "index.html");
+    if (existsSync(candidate)) {
+      meta.slug = stripped;
+      return candidate;
+    }
+  }
+  return null;
+}
+
 async function extractPost(url) {
   const meta = parsePermalink(url);
   if (!meta) {
     failures.push({ url, reason: "URL did not match permalink pattern" });
     return null;
   }
-  const filePath = path.join(ROOT, url.replace(/^\//, ""), "index.html");
-  if (!existsSync(filePath)) {
-    failures.push({ url, reason: "index.html not found at " + filePath });
+  const filePath = resolvePostFile(meta);
+  if (!filePath) {
+    failures.push({ url, reason: "index.html not found for " + url });
     return null;
   }
   const html = await readFile(filePath, "utf8");
@@ -283,6 +422,7 @@ async function extractPost(url) {
     $img.removeAttr("srcset").removeAttr("data-od-added-sizes").removeAttr("data-od-unknown-tag").removeAttr("sizes").removeAttr("data-litespeed-src").removeAttr("data-lazyloaded");
   });
 
+  convertFlashEmbeds($body, $);
   cleanBodyHtml($body, $);
 
   const bodyHtml = $body.html() || "";
@@ -297,6 +437,7 @@ async function extractPost(url) {
     const cDate = $c.find(".comment-metadata time").first().attr("datetime") || "";
     const $cBody = $c.find(".comment-content").first().clone();
     $cBody.find("script, style").remove();
+    if ($cBody.length) convertFlashEmbeds($cBody, $);
     const cMd = $cBody.length ? htmlToMarkdown($cBody.html() || "").trim() : "";
     if (cAuthor || cMd) {
       comments.push({
@@ -373,6 +514,7 @@ async function extractStaticPage(slug) {
     if (!$img.attr("alt")) $img.attr("alt", "");
     $img.removeAttr("srcset").removeAttr("data-od-added-sizes").removeAttr("data-od-unknown-tag").removeAttr("sizes");
   });
+  convertFlashEmbeds($body, $);
   cleanBodyHtml($body, $);
   const markdown = htmlToMarkdown($body.html() || "");
 
@@ -479,6 +621,8 @@ async function main() {
   console.log(`\nExtracted ${summaries.length} posts.`);
   if (pageResults.length) console.log(`Extracted ${pageResults.length} static pages.`);
   if (taxResult) console.log(`Built taxonomies: ${taxResult.tagCount} tags, ${taxResult.catCount} categories.`);
+  console.log("\nEmbed conversions:");
+  for (const [k, v] of Object.entries(embedStats)) console.log(`  ${k}: ${v}`);
   if (failures.length) {
     console.log(`\nFailures (${failures.length}):`);
     for (const f of failures) console.log(`  - ${f.url}: ${f.reason}`);
@@ -496,6 +640,7 @@ async function main() {
         extracted_posts: summaries.length,
         pages: pageResults.length,
         failures,
+        embeds: embedStats,
         mode: { sample: SAMPLE_MODE, pages_only: PAGES_MODE, taxonomies_only: TAX_MODE, only: [...onlyUrls] },
       },
       null,
