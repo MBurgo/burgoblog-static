@@ -1,3 +1,0 @@
-# BEGIN XML-SITEMAP-PLUGIN
-Sitemap: http://www.burgoblog.com/sitemap.xml
-# END XML-SITEMAP-PLUGIN
