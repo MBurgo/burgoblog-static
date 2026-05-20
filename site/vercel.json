@@ -1,1 +1,19 @@
-{}
+{
+  "trailingSlash": true,
+  "redirects": [
+    { "source": "/feed", "destination": "/rss.xml", "permanent": true },
+    { "source": "/feed/", "destination": "/rss.xml", "permanent": true },
+    { "source": "/comments/feed", "destination": "/rss.xml", "permanent": true },
+    { "source": "/comments/feed/", "destination": "/rss.xml", "permanent": true },
+    { "source": "/rss", "destination": "/rss.xml", "permanent": true },
+    { "source": "/rss/", "destination": "/rss.xml", "permanent": true },
+    { "source": "/feed/rss/", "destination": "/rss.xml", "permanent": true },
+    { "source": "/feed/rss2/", "destination": "/rss.xml", "permanent": true },
+    { "source": "/feed/atom/", "destination": "/rss.xml", "permanent": true },
+
+    { "source": "/2007/10/16/led-zep-to-sell-music-online%E2%80%A6-finally/", "destination": "/2007/10/16/led-zep-to-sell-music-online-finally/", "permanent": true },
+    { "source": "/2008/05/15/live-music-friday-howie-day-live-at-the-house-of-blues-or-i%E2%80%99m-in-mourning-i-missed-the-howie-day-gig/", "destination": "/2008/05/15/live-music-friday-howie-day-live-at-the-house-of-blues-or-im-in-mourning-i-missed-the-howie-day-gig/", "permanent": true },
+    { "source": "/2011/08/02/andrew-bird-bein%E2%80%99-green-kermit-cover-stream/", "destination": "/2011/08/02/andrew-bird-bein-green-kermit-cover-stream/", "permanent": true },
+    { "source": "/2011/09/26/ryan-adams-%E2%80%98ashes-fire%E2%80%99-full-album-stream/", "destination": "/2011/09/26/ryan-adams-%E2%80%98ashes-fire-full-album-stream/", "permanent": true }
+  ]
+}
