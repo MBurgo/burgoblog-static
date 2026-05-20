@@ -1,0 +1,28 @@
+---
+// Static page (About, Contact, etc). Simpler than Post — no album hero,
+// no margin notes, just a centred title + body.
+import Base from './Base.astro';
+import TopUtility from '../components/layout/TopUtility.astro';
+import Footer from '../components/layout/Footer.astro';
+import Rule from '../components/ui/Rule.astro';
+
+interface Props {
+  title: string;
+  description?: string;
+}
+const { title, description } = Astro.props;
+---
+
+<Base title={`${title} · Burgo's Music Blog`} description={description}>
+  <TopUtility compact />
+
+  <article class="relative px-4 md:px-14 pt-12 max-w-[820px] mx-auto">
+    <h1 class="font-display text-[clamp(40px,7vw,84px)] m-0" style="line-height:0.9;letter-spacing:-0.025em;">{title}</h1>
+    <Rule color="#1a140c" thick={1.5} class="mt-7" />
+    <div id="main" class="prose mt-10 pb-12">
+      <slot />
+    </div>
+  </article>
+
+  <Footer />
+</Base>

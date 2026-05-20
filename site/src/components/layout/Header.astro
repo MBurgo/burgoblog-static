@@ -1,0 +1,19 @@
+---
+// Stitches together the top utility strip, masthead, and nav for full-fat
+// pages (homepage, archives). The post page uses a compact variant of the
+// utility strip and skips the masthead — see layouts/Post.astro.
+import TopUtility from './TopUtility.astro';
+import Masthead from './Masthead.astro';
+import Nav from './Nav.astro';
+
+interface Props {
+  postCount: number;
+  yearsRunning: number;
+  lastUpdated?: string;
+}
+const { postCount, yearsRunning, lastUpdated } = Astro.props;
+---
+
+<TopUtility />
+<Masthead postCount={postCount} yearsRunning={yearsRunning} lastUpdated={lastUpdated} />
+<Nav />

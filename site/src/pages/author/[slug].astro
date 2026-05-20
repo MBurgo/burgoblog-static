@@ -1,0 +1,23 @@
+---
+import Archive from '../../layouts/Archive.astro';
+import ArchiveList from '../../components/archive/ArchiveList.astro';
+import { getSortedPosts } from '@/lib/data';
+
+export async function getStaticPaths() {
+  // Burgo is the only author on the legacy WP install; surface them here so
+  // /author/burgo/ keeps working. Task 3 can expand this if guest posts surface.
+  return [{ params: { slug: 'burgo' }, props: { name: 'Burgo' } }];
+}
+
+const { name, slug } = Astro.props as { name: string; slug?: string };
+const all = await getSortedPosts();
+const posts = all.filter((post) => post.data.author.toLowerCase() === name.toLowerCase());
+---
+
+<Archive
+  title={name}
+  eyebrow="AUTHOR"
+  meta={`${posts.length} ${posts.length === 1 ? 'POST' : 'POSTS'} BY ${name.toUpperCase()}`}
+>
+  <ArchiveList posts={posts} />
+</Archive>

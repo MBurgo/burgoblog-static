@@ -1,0 +1,63 @@
+---
+import Base from '../layouts/Base.astro';
+import Header from '../components/layout/Header.astro';
+import Footer from '../components/layout/Footer.astro';
+import SideAFeatured from '../components/home/SideAFeatured.astro';
+import SideBTrack from '../components/home/SideBTrack.astro';
+import Vault from '../components/home/Vault.astro';
+import TagWall from '../components/home/TagWall.astro';
+import Pagination from '../components/archive/Pagination.astro';
+import Rule from '../components/ui/Rule.astro';
+import { getSortedPosts, postsByYear, topTags } from '@/lib/data';
+
+const posts = await getSortedPosts();
+const featured = posts[0];
+const recent = posts.slice(1, 7);
+const years = postsByYear(posts);
+const tags = topTags(32);
+
+const POSTS_PER_PAGE = 10;
+const lastPage = Math.max(1, Math.ceil(posts.length / POSTS_PER_PAGE));
+const currentYear = new Date().getFullYear();
+const yearsRunning = currentYear - 2007 + 1;
+const lastUpdated = featured
+  ? `${['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'][featured.data.date.getMonth()]} '${String(featured.data.date.getFullYear()).slice(-2)}`
+  : undefined;
+---
+
+<Base title="Burgo's Music Blog">
+  <Header postCount={posts.length} yearsRunning={yearsRunning} lastUpdated={lastUpdated} />
+
+  <main id="main">
+    {featured && <SideAFeatured post={featured} />}
+
+    <section class="relative px-4 md:px-14 pt-14">
+      <div class="flex items-baseline justify-between mb-5 gap-3 flex-wrap">
+        <div class="flex items-baseline gap-4 flex-wrap">
+          <span class="kicker">RECENT</span>
+          <span class="font-display text-3xl md:text-4xl leading-none">From the archive.</span>
+        </div>
+        <span class="meta">← NEWER · 01 — {String(recent.length).padStart(2, '0')} · OLDER →</span>
+      </div>
+
+      <Rule color="#1a140c" thick={1.5} />
+
+      <ul class="list-none m-0 p-0">
+        {recent.map((post, i) => (
+          <SideBTrack
+            post={post}
+            number={String(i + 2).padStart(2, '0')}
+            last={i === recent.length - 1}
+          />
+        ))}
+      </ul>
+
+      <Pagination currentPage={1} lastPage={lastPage} nextUrl={lastPage > 1 ? '/page/2/' : undefined} />
+    </section>
+
+    <Vault years={years} totalPosts={posts.length} />
+    <TagWall tags={tags} />
+  </main>
+
+  <Footer />
+</Base>

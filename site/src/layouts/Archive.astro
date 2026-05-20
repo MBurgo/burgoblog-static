@@ -1,0 +1,33 @@
+---
+// Generic archive shell — used by tag/category/author/year archives and
+// homepage pagination. Header is a kicker + title + small meta blurb.
+import Base from './Base.astro';
+import TopUtility from '../components/layout/TopUtility.astro';
+import Footer from '../components/layout/Footer.astro';
+import Rule from '../components/ui/Rule.astro';
+
+interface Props {
+  title: string;
+  eyebrow: string;
+  description?: string;
+  meta?: string;
+}
+const { title, eyebrow, description, meta } = Astro.props;
+---
+
+<Base title={`${title} · Burgo's Music Blog`} description={description}>
+  <TopUtility compact />
+
+  <header class="relative px-4 md:px-14 pt-12">
+    <div class="kicker">{eyebrow}</div>
+    <h1 class="font-display text-[clamp(40px,7vw,84px)] mt-2" style="line-height:0.9;letter-spacing:-0.025em;">{title}</h1>
+    {meta && <p class="meta mt-2">{meta}</p>}
+    <Rule color="#1a140c" thick={1.5} class="mt-7" />
+  </header>
+
+  <main id="main" class="px-4 md:px-14 pt-8 pb-12">
+    <slot />
+  </main>
+
+  <Footer />
+</Base>

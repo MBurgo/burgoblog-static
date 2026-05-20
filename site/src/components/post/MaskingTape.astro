@@ -1,0 +1,44 @@
+---
+// Strip of masking tape with serrated edges. Rotation and colour are props.
+interface Props {
+  width?: number;
+  height?: number;
+  rotate?: number;
+  color?: string;
+  class?: string;
+}
+const {
+  width = 90,
+  height = 26,
+  rotate = -3,
+  color = '#f2d26b',
+  class: className = '',
+} = Astro.props;
+
+const teethCount = Math.ceil(width / 6);
+const topTeeth = `M0 4 ${Array.from({ length: teethCount }, (_, i) => `L${i * 6 + 3} ${(i % 2) * 2}`).join(' ')} L${width} 4 Z`;
+const bottomTeeth = `M0 0 ${Array.from({ length: teethCount }, (_, i) => `L${i * 6 + 3} ${4 - (i % 2) * 2}`).join(' ')} L${width} 0 Z`;
+---
+
+<div
+  class:list={['relative', className]}
+  style={`width:${width}px;height:${height}px;transform:rotate(${rotate}deg);background:linear-gradient(180deg, ${color} 0%, ${color} 60%, color-mix(in srgb, ${color}, #8a6a1f 15%) 100%);opacity:0.88;box-shadow:0 4px 8px rgba(40,30,10,.18), inset 0 -1px 0 rgba(0,0,0,.12);`}
+  aria-hidden="true"
+>
+  <svg
+    width={width} height="4"
+    viewBox={`0 0 ${width} 4`}
+    style="position:absolute;top:-3px;left:0"
+    preserveAspectRatio="none"
+  >
+    <path d={topTeeth} fill={color} opacity="0.88" />
+  </svg>
+  <svg
+    width={width} height="4"
+    viewBox={`0 0 ${width} 4`}
+    style="position:absolute;bottom:-3px;left:0"
+    preserveAspectRatio="none"
+  >
+    <path d={bottomTeeth} fill={color} opacity="0.88" />
+  </svg>
+</div>

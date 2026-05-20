@@ -1,0 +1,29 @@
+---
+import Base from '../layouts/Base.astro';
+import TopUtility from '../components/layout/TopUtility.astro';
+import Footer from '../components/layout/Footer.astro';
+import Stamp from '../components/ui/Stamp.astro';
+import Button from '../components/ui/Button.astro';
+---
+
+<Base title="404 · Track not found · Burgo's Music Blog">
+  <TopUtility compact />
+
+  <main id="main" class="relative px-4 md:px-14 pt-16 pb-20 text-center max-w-[820px] mx-auto">
+    <div class="flex justify-center mb-8">
+      <Stamp size={140} top="SIDE B · NEVER · PRESSED" center={'404'} rotate={-4} />
+    </div>
+    <h1 class="font-display text-[clamp(48px,10vw,120px)] m-0" style="line-height:0.9;letter-spacing:-0.025em;">
+      Track not found.
+    </h1>
+    <p class="font-serif italic text-xl text-ink-2 mt-4">
+      This record's not in the catalog. Maybe it never was — or maybe it got filed under a different sleeve.
+    </p>
+    <div class="mt-10 flex flex-wrap gap-4 justify-center">
+      <Button href="/">Back to the index</Button>
+      <a href="/popular-posts/" class="underline underline-offset-4 hover:text-oxblood">Try the popular posts →</a>
+    </div>
+  </main>
+
+  <Footer />
+</Base>

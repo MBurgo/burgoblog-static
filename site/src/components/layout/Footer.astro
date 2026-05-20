@@ -1,0 +1,44 @@
+---
+// Three-column colophon. Mirrors the homepage footer from the design.
+const findLinks: Array<[string, string]> = [
+  ['Popular Posts', '/popular-posts/'],
+  ['About', '/about-3/'],
+  ['Music Policy', '/music-policy/'],
+  ['Contact', '/contact/'],
+  ['Want your band featured?', '/want-your-band-featured-here/'],
+];
+---
+
+<footer class="relative px-4 md:px-14 pt-16 pb-12 mt-10 border-t-[1.5px] border-ink">
+  <div class="grid grid-cols-1 md:grid-cols-[1.5fr_1fr_1fr] gap-8 md:gap-9">
+    <div>
+      <div class="kicker">COLOPHON</div>
+      <div class="font-display text-[clamp(36px,5vw,56px)] mt-2" style="line-height:0.95;letter-spacing:-0.02em;">
+        Run by one<br />
+        <span class="font-serif italic" style="font-weight:600;">Matt &ldquo;Burgo&rdquo; Burgess</span><br />
+        from Brisbane.
+      </div>
+    </div>
+    <div>
+      <div class="kicker mb-2.5">FIND</div>
+      <ul class="list-none p-0 m-0 font-serif text-lg leading-relaxed">
+        {findLinks.map(([label, href]) => (
+          <li><a href={href} class="hover:border-b hover:border-ink py-1 inline-block">{label}</a></li>
+        ))}
+      </ul>
+    </div>
+    <div>
+      <div class="kicker mb-2.5">SAY HELLO</div>
+      <div class="font-serif text-lg leading-relaxed text-ink-2">
+        @therealburgo<br />
+        RSS · <a href="/rss.xml" class="underline-offset-2 hover:text-oxblood">burgoblog.com/feed</a><br />
+        Email · on the about page.
+      </div>
+    </div>
+  </div>
+  <div class="flex flex-col md:flex-row justify-between items-start md:items-center mt-14 gap-3 font-mono text-[10.5px] tracking-kicker text-ink-3">
+    <span>© MMVII–MMXXVI · BURGO'S MUSIC BLOG</span>
+    <span class="hidden md:inline">PRINTED ON PAPER ·· HAND-SET · POWERED BY COFFEE</span>
+    <a href="#main" class="text-ink-3 hover:text-ink">↑ BACK TO THE TOP</a>
+  </div>
+</footer>

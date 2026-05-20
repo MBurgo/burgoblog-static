@@ -1,0 +1,54 @@
+---
+// One row on the homepage's "From the archive" list.
+// 4-column grid: track number, sleeve, title block, date/comments/CTA.
+import AlbumSleeve from '../post/AlbumSleeve.astro';
+import type { PostEntry } from '@/lib/data';
+import { dekFor, formatMetaDate, toneForPost } from '@/lib/data';
+
+interface Props {
+  post: PostEntry;
+  number: string;
+  last?: boolean;
+}
+const { post, number, last = false } = Astro.props;
+const tone = toneForPost(post);
+const dek = dekFor(post, 220);
+const sleeveTitle = post.data.title
+  .split(/\s+/)
+  .slice(-2)
+  .join(' ')
+  .toUpperCase();
+---
+
+<li class={last ? 'border-b-[1.5px] border-ink' : 'border-b border-dashed border-rule'}>
+  <a
+    href={post.data.permalink}
+    class="grid grid-cols-1 md:grid-cols-[60px_180px_1fr_140px] gap-6 md:gap-8 items-center py-7 text-ink hover:bg-[rgba(20,15,8,0.03)] group"
+    aria-label={`${post.data.title} — ${formatMetaDate(post.data.date)}`}
+  >
+    <span class="font-mono text-[13px] tracking-track text-oxblood">{number}</span>
+    <div class="hidden md:block">
+      <AlbumSleeve size={180} label={sleeveTitle} sub={formatMetaDate(post.data.date)} tone={tone} />
+    </div>
+    <span class="block">
+      {post.data.categories.length > 0 && (
+        <span class="block kicker">{post.data.categories.slice(0, 2).join(' · ').toUpperCase()}</span>
+      )}
+      <span class="block font-display text-[28px] md:text-[40px] my-1.5" style="line-height:1.02;letter-spacing:-0.015em;">
+        {post.data.title}
+      </span>
+      <span class="block font-serif text-[15px] md:text-[17px] leading-relaxed text-ink-2 max-w-[600px]">
+        {dek}
+      </span>
+    </span>
+    <span class="text-left md:text-right font-mono text-[11px] tracking-track text-ink-3 leading-[1.8]">
+      <span class="block">{formatMetaDate(post.data.date)}</span>
+      <span class="block">
+        {post.data.comment_count === 0 ? 'NO COMMENTS' : `${post.data.comment_count} COMMENT${post.data.comment_count === 1 ? '' : 'S'}`}
+      </span>
+      <span class="block mt-3 text-oxblood font-bold group-hover:bg-oxblood group-hover:text-paper group-hover:px-2 transition-all">
+        READ →
+      </span>
+    </span>
+  </a>
+</li>

@@ -1,0 +1,149 @@
+@import './fonts.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --paper: #f3ead6;
+    --paper-2: #ebe0c4;
+    --paper-3: #e0d2ad;
+    --ink: #1a140c;
+    --ink-2: #3a2f22;
+    --ink-3: #5a4d3a;
+    --rule: #2a221733;
+    --oxblood: #8a2a1c;
+    --mustard: #c58a2e;
+    --tape: #f2d26b;
+  }
+
+  html,
+  body {
+    @apply bg-paper text-ink font-sans;
+    margin: 0;
+    padding: 0;
+    min-height: 100%;
+  }
+
+  /* Subtle paper-grain texture, painted once at the body level. The
+     per-page `<PaperBg />` SVG layers on top for fiber + age blotches. */
+  body {
+    background-image:
+      radial-gradient(at 15% 92%, rgba(168, 122, 48, 0.06) 0, transparent 50%),
+      radial-gradient(at 88% 8%, rgba(168, 122, 48, 0.06) 0, transparent 50%);
+  }
+
+  h1, h2, h3, h4 {
+    @apply font-display text-ink;
+    margin: 0;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  a:focus-visible,
+  button:focus-visible,
+  [tabindex]:focus-visible {
+    outline: 2px solid theme('colors.oxblood');
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  /* Skip link — first focusable on tab. */
+  .skip-link {
+    @apply absolute top-2 left-2 px-4 py-2 bg-ink text-paper font-mono text-xs tracking-track no-underline z-50;
+    transform: translateY(-200%);
+    transition: transform 0.12s;
+  }
+  .skip-link:focus {
+    transform: translateY(0);
+  }
+
+  .kicker {
+    @apply font-mono text-[11px] tracking-kicker text-oxblood uppercase;
+  }
+
+  .eyebrow {
+    @apply font-mono text-[11px] tracking-eyebrow text-ink-3 uppercase;
+  }
+
+  .meta {
+    @apply font-mono text-[11px] tracking-kicker text-ink-3 uppercase;
+  }
+
+  .cta {
+    @apply inline-flex items-center gap-2.5 font-sans font-bold text-[13px] tracking-track uppercase text-paper bg-ink py-3 px-5 shadow-cta;
+    min-height: 44px;
+    box-sizing: border-box;
+  }
+  .cta:active {
+    transform: translate(4px, 4px);
+    box-shadow: 0 0 0 theme('colors.oxblood');
+  }
+
+  /* Tag chip — bordered mono pill. */
+  .chip {
+    @apply inline-flex items-center font-mono text-[10.5px] tracking-[0.14em] py-1 px-2.5 border border-ink text-ink no-underline;
+  }
+}
+
+/* Drop cap for the first paragraph of a post body. */
+.dropcap > p:first-of-type::first-letter {
+  font-family: theme('fontFamily.display');
+  float: left;
+  font-size: 130px;
+  line-height: 0.82;
+  padding-right: 14px;
+  padding-top: 8px;
+  color: theme('colors.oxblood');
+}
+
+/* Prose styles for post body — Newsreader, generous line-height. */
+.prose {
+  @apply font-serif text-[19px] leading-[1.55] text-ink;
+}
+.prose p { margin: 0 0 1.25em; }
+.prose p:last-child { margin-bottom: 0; }
+.prose a {
+  color: theme('colors.oxblood');
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+.prose a:hover {
+  color: theme('colors.oxblood-2');
+}
+.prose h2 {
+  @apply font-display text-5xl mt-12 mb-4;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+}
+.prose h3 {
+  @apply font-display text-3xl mt-10 mb-3;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+}
+.prose blockquote {
+  margin: 2rem -1rem;
+  padding: 1.5rem 2rem;
+  border-top: 1.5px solid theme('colors.ink');
+  border-bottom: 1.5px solid theme('colors.ink');
+  font-family: theme('fontFamily.display');
+  font-size: 2rem;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  text-align: center;
+}
+.prose ul, .prose ol { margin: 0 0 1.25em 1.5em; }
+.prose li { margin-bottom: 0.4em; }
+.prose img { max-width: 100%; height: auto; }
+.prose iframe {
+  max-width: 100%;
+  aspect-ratio: 16 / 9;
+  height: auto;
+  margin: 2rem 0;
+}

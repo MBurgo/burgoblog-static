@@ -1,0 +1,50 @@
+---
+import '../styles/base.css';
+import PaperBg from '../components/ui/PaperBg.astro';
+
+interface Props {
+  title: string;
+  description?: string;
+  ogImage?: string;
+  bodyClass?: string;
+  /** Provide the paper texture container — page-level layouts opt out
+   *  when they need to render their own background. */
+  paper?: boolean;
+}
+const {
+  title,
+  description = "Matt Burgess's music blog — running since 2007, posting from Brisbane.",
+  ogImage,
+  bodyClass = '',
+  paper = true,
+} = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site).toString();
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>{title}</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:type" content="website" />
+    {ogImage && <meta property="og:image" content={ogImage} />}
+    <meta name="theme-color" content="#F3EAD6" />
+    <link rel="alternate" type="application/rss+xml" title="Burgo's Music Blog" href="/rss.xml" />
+  </head>
+  <body class={bodyClass}>
+    <a href="#main" class="skip-link">SKIP TO CONTENT</a>
+    {paper && (
+      <div class="relative min-h-screen overflow-hidden">
+        <PaperBg />
+        <slot />
+      </div>
+    )}
+    {!paper && <slot />}
+  </body>
+</html>

@@ -1,0 +1,21 @@
+---
+// Vertical list of posts used by `/page/N/`, tag/category/author/year archives.
+import SideBTrack from '../home/SideBTrack.astro';
+import type { PostEntry } from '@/lib/data';
+
+interface Props {
+  posts: PostEntry[];
+  startIndex?: number;
+}
+const { posts, startIndex = 1 } = Astro.props;
+---
+
+<ul class="list-none m-0 p-0 border-t-[1.5px] border-ink">
+  {posts.map((post, i) => (
+    <SideBTrack
+      post={post}
+      number={String(startIndex + i).padStart(2, '0')}
+      last={i === posts.length - 1}
+    />
+  ))}
+</ul>

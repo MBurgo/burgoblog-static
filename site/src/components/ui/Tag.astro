@@ -1,0 +1,17 @@
+---
+interface Props {
+  href?: string;
+  variant?: 'default' | 'ink' | 'oxblood';
+}
+const { href, variant = 'default' } = Astro.props;
+const Tag = href ? 'a' : 'span';
+const variantClass = {
+  default: 'chip',
+  ink: 'chip bg-ink text-paper border-ink',
+  oxblood: 'chip bg-oxblood text-paper border-oxblood',
+}[variant];
+---
+
+<Tag href={href} class={variantClass}>
+  <slot />
+</Tag>

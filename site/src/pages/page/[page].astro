@@ -1,0 +1,33 @@
+---
+import Archive from '../../layouts/Archive.astro';
+import ArchiveList from '../../components/archive/ArchiveList.astro';
+import Pagination from '../../components/archive/Pagination.astro';
+import { getSortedPosts } from '@/lib/data';
+import type { GetStaticPathsOptions } from 'astro';
+
+export async function getStaticPaths({ paginate }: GetStaticPathsOptions) {
+  const posts = await getSortedPosts();
+  return paginate(posts, { pageSize: 10 });
+}
+
+const { page } = Astro.props;
+// `paginate()` generates page/1, page/2, ... — page 1 is the homepage,
+// so we skip generating /page/1/.
+if (page.currentPage === 1) {
+  return Astro.redirect('/');
+}
+---
+
+<Archive
+  title={`Page ${page.currentPage}`}
+  eyebrow="THE ARCHIVE"
+  meta={`PAGE ${String(page.currentPage).padStart(2, '0')} / ${String(page.lastPage).padStart(2, '0')} · ${page.total} POSTS`}
+>
+  <ArchiveList posts={page.data} startIndex={(page.currentPage - 1) * page.size + 1} />
+  <Pagination
+    currentPage={page.currentPage}
+    lastPage={page.lastPage}
+    prevUrl={page.url.prev ?? undefined}
+    nextUrl={page.url.next ?? undefined}
+  />
+</Archive>

@@ -1,0 +1,40 @@
+---
+// Bands-on-heaviest-rotation tag cloud. Font size scales with post count.
+import type { Tag } from '@/lib/data';
+
+interface Props {
+  tags: Tag[];
+  title?: string;
+  meta?: string;
+}
+const { tags, title = 'The wall.', meta = 'BANDS MENTIONED MOST' } = Astro.props;
+
+const counts = tags.map((t) => t.post_count);
+const max = Math.max(1, ...counts);
+const min = Math.min(...counts);
+const range = Math.max(1, max - min);
+---
+
+<section class="relative px-4 md:px-14 pt-16">
+  <div class="flex items-baseline justify-between mb-5 gap-3 flex-wrap">
+    <div class="flex items-baseline gap-4 flex-wrap">
+      <span class="kicker">ON HEAVY ROTATION</span>
+      <span class="font-display text-3xl md:text-4xl leading-none">{title}</span>
+    </div>
+    <span class="meta">{meta}</span>
+  </div>
+
+  <div class="flex flex-wrap items-baseline gap-x-4 gap-y-2 bg-paper-2 px-7 py-8" style="box-shadow:inset 0 0 0 1px rgba(0,0,0,.06);">
+    {tags.map((tag) => {
+      const normalised = (tag.post_count - min) / range;
+      const size = Math.round(16 + normalised * 40);
+      return (
+        <a
+          href={`/tag/${tag.slug}/`}
+          class="font-display leading-none text-ink hover:text-oxblood"
+          style={`font-size:${size}px;`}
+        >{tag.name}</a>
+      );
+    })}
+  </div>
+</section>

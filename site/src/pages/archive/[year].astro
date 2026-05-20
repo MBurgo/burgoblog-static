@@ -1,0 +1,26 @@
+---
+import Archive from '../../layouts/Archive.astro';
+import YearGroup from '../../components/archive/YearGroup.astro';
+import { getSortedPosts } from '@/lib/data';
+
+export async function getStaticPaths() {
+  const posts = await getSortedPosts();
+  const years = new Set(posts.map((p) => p.data.date.getFullYear()));
+  return Array.from(years).map((year) => ({
+    params: { year: String(year) },
+    props: { year },
+  }));
+}
+
+const { year } = Astro.props as { year: number };
+const all = await getSortedPosts();
+const posts = all.filter((post) => post.data.date.getFullYear() === year);
+---
+
+<Archive
+  title={String(year)}
+  eyebrow="THE VAULT"
+  meta={`${posts.length} ${posts.length === 1 ? 'POST' : 'POSTS'} FROM ${year}`}
+>
+  <YearGroup year={year} posts={posts} />
+</Archive>
