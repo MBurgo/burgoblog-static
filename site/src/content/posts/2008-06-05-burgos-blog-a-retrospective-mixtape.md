@@ -23,9 +23,7 @@ That said, I hope that the playlist below gives some kind of overview to the pas
 
 <!-- embed dropped: flash-object http://www.mixwit.com/flash/widgets/shell.swf -->
 
-[![](/public/resources/img/embed/make-a-mixtape.gif)](http://www.mixwit.com/create?refer=embed)
-
-![](data:image/gif;base64,R0lGODdhAQABAPAAAMPDwwAAACwAAAAAAQABAAACAkQBADs=)
+[Make a mixtape →](http://www.mixwit.com/create?refer=embed)
 
 1.) [City & Colour – Body In A Box](/2008/02/15/dallas-green-city-and-colour/)  
 2.) [Matthew Ryan – Gone For Good](/2008/04/16/thursday-music-round-up-matthew-ryan-josh-ritter-new-atlantic-the-kooks/)  

@@ -11,7 +11,6 @@ permalink: /2008/05/08/live-music-friday-ryan-adams-the-cardinals-live-on-nprs-w
 ---
 Just so that everyone knows, my iPod has officially given up the ghost, completely and utterly without warning. With most of my music on there, this is severely going to impact posting, and – quite frankly, more importantly – completely bums me out. Anyone want to start a “_donate to help Matthew buy another iPod as he’s already in mountains of debt_” fund? **Oh wait, I already did… a shameless cry for help, yes, I know, but a guy’s gotta do what a guy’s gotta do…**
 
- ![](/en_AU/i/scr/pixel.gif)  
 **Help a brother out, and keep the tunes flowing, would you? Click the donate button to help sponsor through Paypal. Every cent helps…**   
 
 **Anyway. Welcome back to another [Live Music Friday](/category/live-music-friday/).** For today’s post, I thought I’d fall back on the always sublime **Ryan Adams and the Cardinals.**

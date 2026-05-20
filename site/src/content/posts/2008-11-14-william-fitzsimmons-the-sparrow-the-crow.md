@@ -9,8 +9,6 @@ featured_image: null
 comment_count: 1
 permalink: /2008/11/14/william-fitzsimmons-the-sparrow-the-crow/
 ---
-[![](/7xjnjh3.jpg)](http://www.myspace.com/williamfitzsimmons)
-
 **For some reason, if you’d asked me last week whether I had posted about [William Fitzsimmons](http://www.williamfitzsimmons.com/) on this blog before, I would have sworn blind that I had discussed his 2006 album “Goodnight” sometime in 2007.** However, I recently received his 2008 album, “**The Sparrow & The Crow**“, and was preparing a post when I looked back through this blog archives – trying to find my past post – and I realised that I must have dreamed the whole thing.
 
 **But you know, for some reason that’s kind of fitting.** William Fitzsimmon’s work has that ethereal, floating quality from which the best dreams are made.
