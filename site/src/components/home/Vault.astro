@@ -3,6 +3,13 @@
 // Spine heights scale logarithmically with post count so single-post
 // years stay legible while 2008 (the heaviest year) doesn't dwarf them.
 // Hover/focus reveals the year's three highest-commented posts.
+//
+// The spine container is a <div>, NOT an <a>: the popover contains
+// per-post <a> links, and HTML5 parsers refuse to nest <a> tags —
+// they auto-close the outer one and reparent the inner content as
+// siblings of the wrapper, which previously left the <ol> floating
+// outside the popover and broke the hover layout. The year-archive
+// link instead lives on the spine body itself (one <a>, no nesting).
 import type { YearGroup } from '@/lib/data';
 
 interface Props {
@@ -17,10 +24,6 @@ const LIGHT_TONES = new Set(['#e9d9b3', '#c58a2e']);
 const firstYear = years[0]?.year ?? new Date().getFullYear();
 const lastYear = years[years.length - 1]?.year ?? new Date().getFullYear();
 
-// Precompute spine geometry up here — keeps the JSX expression block
-// below free of `<=`/`>=` which the Astro template parser dislikes.
-// `popPin` flags which edge the popover should hug so the first/last
-// spines' popovers don't clip — see .vault-pop--{left,right,center} below.
 const spines = years.map((y, idx) => {
   const height = 90 + Math.log(y.count + 1) * 30;
   const color = PALETTE[y.year % PALETTE.length];
@@ -43,22 +46,20 @@ const spines = years.map((y, idx) => {
 
   <div class="vault-shelf flex items-end gap-2 px-6 py-7 bg-paper-2 border-b-[6px] border-ink overflow-x-auto md:overflow-visible">
     {spines.map(({ y, height, color, onLight, popPin }) => (
-        <a
-          href={`/archive/${y.year}/`}
-          class="vault-spine flex-1 min-w-[40px] flex flex-col items-center gap-2"
-          aria-label={`${y.year} archive — ${y.count} ${y.count === 1 ? 'post' : 'posts'}`}
-        >
+        <div class="vault-spine flex-1 min-w-[40px] flex flex-col items-center gap-2">
           <span class="font-mono text-[10px] tracking-track text-ink-3">{y.count} {y.count === 1 ? 'post' : 'posts'}</span>
-          <span
+          <a
+            href={`/archive/${y.year}/`}
             class="vault-spine__body w-full flex items-center justify-center font-display text-2xl md:text-3xl"
             style={`height:${height}px;background:${color};color:${onLight ? '#1a140c' : '#f3ead6'};writing-mode:vertical-rl;text-orientation:mixed;letter-spacing:0.04em;box-shadow:inset 0 0 0 1px rgba(0,0,0,.25), 0 4px 10px rgba(0,0,0,.15);`}
-          >{y.year}</span>
-          <span class={`vault-pop vault-pop--${popPin} p-4 bg-paper text-ink`} role="tooltip">
-            <span class="vault-pop__head flex justify-between items-baseline pb-2 mb-2.5 border-b border-ink font-mono text-[10.5px] tracking-kicker text-ink-3">
+            aria-label={`${y.year} archive — ${y.count} ${y.count === 1 ? 'post' : 'posts'}`}
+          >{y.year}</a>
+          <div class={`vault-pop vault-pop--${popPin} p-4 bg-paper text-ink`} role="tooltip">
+            <div class="vault-pop__head flex justify-between items-baseline pb-2 mb-2.5 border-b border-ink font-mono text-[10.5px] tracking-kicker text-ink-3">
               <span class="font-display text-3xl leading-none text-ink" style="letter-spacing:-0.01em;">{y.year}</span>
               <span>{y.count} {y.count === 1 ? 'POST' : 'POSTS'}</span>
-            </span>
-            <ol class="list-none m-0 p-0 flex flex-col gap-2">
+            </div>
+            <ol class="vault-pop__list list-none m-0 p-0 flex flex-col gap-2">
               {y.top.map((entry, i) => (
                 <li class="grid grid-cols-[22px_1fr] gap-2 items-baseline font-serif text-[15px] leading-snug text-ink">
                   <span class="font-mono text-[10.5px] tracking-track text-oxblood">{String(i + 1).padStart(2, '0')}</span>
@@ -67,34 +68,31 @@ const spines = years.map((y, idx) => {
               ))}
             </ol>
             {y.count > y.top.length && (
-              <span class="block mt-3 pt-2.5 border-t border-dashed border-rule font-mono text-[10.5px] tracking-kicker text-oxblood">
-                SEE ALL {y.count} →
-              </span>
+              <a
+                href={`/archive/${y.year}/`}
+                class="vault-pop__more block mt-3 pt-2.5 border-t border-dashed border-rule font-mono text-[10.5px] tracking-kicker text-oxblood"
+              >SEE ALL {y.count} →</a>
             )}
-          </span>
-        </a>
+          </div>
+        </div>
       ))}
   </div>
 </section>
 
 <style is:global>
-  /* Vault — record-spine shelf with on-hover popovers. Styles are global so
-     they're written verbatim into the CSS bundle (the previous scoped block
-     emitted only as an inlined chunk in the homepage <head> and the
-     popovers ended up taking layout space at viewport widths where the
-     transform-stack didn't kick in). `visibility: hidden` guarantees the
-     popover contributes nothing to layout at rest, regardless of stacking
-     context. */
+  /* Vault — record-spine shelf with on-hover popovers. Hover/focus-within
+     because the spine container is a <div> (not focusable on its own),
+     and the focusable child <a> elements need to drive the popover. */
   .vault-spine {
     position: relative;
-    text-decoration: none;
   }
   .vault-spine__body {
     position: relative;
+    text-decoration: none;
     transition: transform 0.18s cubic-bezier(0.2, 0.7, 0.3, 1), box-shadow 0.18s;
   }
   .vault-spine:hover .vault-spine__body,
-  .vault-spine:focus-visible .vault-spine__body {
+  .vault-spine:focus-within .vault-spine__body {
     transform: translateY(-10px);
     box-shadow: inset 0 0 0 1px rgba(0,0,0,.3), 0 14px 22px rgba(20,15,8,.3);
   }
@@ -140,7 +138,7 @@ const spines = years.map((y, idx) => {
     box-shadow: 1px 1px 0 0 var(--ink);
   }
   .vault-spine:hover .vault-pop,
-  .vault-spine:focus-visible .vault-pop {
+  .vault-spine:focus-within .vault-pop {
     opacity: 1;
     visibility: visible;
     pointer-events: auto;
@@ -150,13 +148,13 @@ const spines = years.map((y, idx) => {
       visibility 0s;
   }
   .vault-spine:hover .vault-pop--left,
-  .vault-spine:focus-visible .vault-pop--left,
+  .vault-spine:focus-within .vault-pop--left,
   .vault-spine:hover .vault-pop--right,
-  .vault-spine:focus-visible .vault-pop--right {
+  .vault-spine:focus-within .vault-pop--right {
     transform: translateY(0);
   }
   .vault-spine:hover .vault-pop--center,
-  .vault-spine:focus-visible .vault-pop--center {
+  .vault-spine:focus-within .vault-pop--center {
     transform: translate(-50%, 0);
   }
 </style>
