@@ -1,10 +1,10 @@
 ---
-title: "Ari Hest – Twelve Mondays"
+title: Ari Hest – Twelve Mondays
 slug: ari-hest-twelve-mondays
 date: 2009-04-01
 author: Burgo
-categories: [2008-releases, 2009-releases, artists, artists-to-watch-for-in-2008, artists-to-watch-for-in-2009, digital-downloads, guitar, live-songs, music, music-videos]
-tags: [52, ari-hest, twelve-mondays]
+categories: ["2008-releases", "2009-releases", artists, artists-to-watch-for-in-2008, artists-to-watch-for-in-2009, digital-downloads, guitar, live-songs, music, music-videos]
+tags: ["52", ari-hest, twelve-mondays]
 featured_image: null
 comment_count: 0
 permalink: /2009/04/01/ari-hest-twelve-mondays/

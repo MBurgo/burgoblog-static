@@ -1,10 +1,10 @@
 ---
-title: "Bernard Fanning – Watch Over Me"
+title: Bernard Fanning – Watch Over Me
 slug: bernard-fanning-watch-over-me
 date: 2007-12-05
 author: Burgo
 categories: [artists, guitar, music]
-tags: [2005, bernard-fanning, max-sessions, watch-over-me]
+tags: ["2005", bernard-fanning, max-sessions, watch-over-me]
 featured_image: null
 comment_count: 0
 permalink: /2007/12/05/bernard-fanning-watch-over-me/

@@ -1,13 +1,13 @@
 ---
-title: "Counting Crows – Saturday Nights and Sunday Mornings"
-slug: "counting-crows-–-saturday-nights-and-sunday-mornings"
+title: Counting Crows – Saturday Nights and Sunday Mornings
+slug: counting-crows-–-saturday-nights-and-sunday-mornings
 date: 2008-01-16
 author: Burgo
-categories: [2008-releases, artists, digital-downloads, guitar, music, rock-gods]
-tags: [1492, counting-crows, saturday-nights-and-sunday-mornings, when-i-dream-of-michaelangelo]
+categories: ["2008-releases", artists, digital-downloads, guitar, music, rock-gods]
+tags: ["1492", counting-crows, saturday-nights-and-sunday-mornings, when-i-dream-of-michaelangelo]
 featured_image: /wp-content/uploads/satnightsundayam.jpg
 comment_count: 1
-permalink: "/2008/01/16/counting-crows-–-saturday-nights-and-sunday-mornings/"
+permalink: /2008/01/16/counting-crows-–-saturday-nights-and-sunday-mornings/
 ---
 ![Counting Crows - Saturday Nights & Sunday Mornings](/wp-content/uploads/satnightsundayam.jpg)
 

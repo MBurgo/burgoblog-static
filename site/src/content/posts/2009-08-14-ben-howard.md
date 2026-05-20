@@ -1,5 +1,5 @@
 ---
-title: So happy I just heard: Ben Howard
+title: "So happy I just heard: Ben Howard"
 slug: ben-howard
 date: 2009-08-14
 author: Burgo
