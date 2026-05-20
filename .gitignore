@@ -1,3 +1,4 @@
 node_modules/
 package-lock.json
+!site/package-lock.json
 content/.last-run.json
