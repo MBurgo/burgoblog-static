@@ -1,5 +1,5 @@
 ---
-title: "Candy Robbers — 1000 Miles"
+title: "Candy Robbers – 1000 Miles"
 slug: candy-robbers-1000-miles
 date: 2014-07-26
 author: Burgo
@@ -8,14 +8,7 @@ tags: [candy-robbers]
 featured_image: null
 comment_count: 0
 permalink: /2014/07/26/candy-robbers-1000-miles/
-sleeveTone: cream
-dek: "This tune from Candy Robbers has got me all kinds of excited. A little restrained — but hints of awesomeness to come."
 ---
+This tune from [Candy Robbers](https://www.facebook.com/candyrobbersband/), “1000 Miles” has got me all kinds of excited. It’s a little… I don’t know… restrained, maybe? But definitely hints like there could be lots of awesomeness to come from these guys. Keep an eye out for them in the future.
 
-This tune from Candy Robbers, "1000 Miles", has got me all kinds of excited. It's a little... I don't know... restrained, maybe? But hints of awesomeness to come.
-
-Take a listen below — and keep an eye on these guys.
-
-<iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ" title="Candy Robbers — 1000 Miles" frameborder="0" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-
-More from them on [Bandcamp](#).
+<iframe src="//www.youtube.com/embed/_g4jpVwdbeE" width="720" height="405" frameborder="0" allowfullscreen="allowfullscreen"></iframe>
