@@ -17,13 +17,80 @@ import Button from '../components/ui/Button.astro';
       Track not found.
     </h1>
     <p class="font-serif italic text-xl text-ink-2 mt-4">
-      This record's not in the catalog. Maybe it never was — or maybe it got filed under a different sleeve.
+      This record's not in the catalog. Maybe it never was — or maybe it got filed under a different sleeve. Try searching the archive instead.
     </p>
+
+    <form class="mt-10 max-w-[520px] mx-auto" role="search" onsubmit="return false;">
+      <label for="q" class="kicker block text-left mb-2">SEARCH THE ARCHIVE</label>
+      <input
+        id="q"
+        type="search"
+        placeholder="artist, album, song…"
+        autocomplete="off"
+        class="w-full bg-paper-2 px-5 py-3.5 font-serif text-lg text-ink"
+        style="box-shadow:inset 0 0 0 1.5px rgba(26,20,12,.85);"
+      />
+    </form>
+    <ul id="search-results" class="mt-6 max-w-[600px] mx-auto text-left list-none p-0 m-0 hidden">
+    </ul>
+    <p id="search-empty" class="meta mt-6 hidden">NO MATCHES.</p>
+
     <div class="mt-10 flex flex-wrap gap-4 justify-center">
       <Button href="/">Back to the index</Button>
-      <a href="/popular-posts/" class="underline underline-offset-4 hover:text-oxblood">Try the popular posts →</a>
+      <a href="/popular-posts/" class="underline underline-offset-4 hover:text-oxblood">Or try the popular posts →</a>
     </div>
   </main>
 
   <Footer />
 </Base>
+
+<script is:inline>
+  (function () {
+    var input = document.getElementById('q');
+    var list = document.getElementById('search-results');
+    var empty = document.getElementById('search-empty');
+    var indexPromise = null;
+    function loadIndex() {
+      if (!indexPromise) {
+        indexPromise = fetch('/search-index.json').then(function (r) { return r.json(); });
+      }
+      return indexPromise;
+    }
+    function render(results) {
+      list.innerHTML = '';
+      if (results.length === 0) {
+        list.classList.add('hidden');
+        empty.classList.remove('hidden');
+        return;
+      }
+      empty.classList.add('hidden');
+      list.classList.remove('hidden');
+      results.slice(0, 20).forEach(function (r) {
+        var li = document.createElement('li');
+        li.className = 'py-2 border-b border-ink-3/20';
+        li.innerHTML =
+          '<a href="' + r.permalink + '" class="block hover:text-oxblood">' +
+          '<span class="font-display text-xl block leading-tight">' + r.title.replace(/&/g,'&amp;').replace(/</g,'&lt;') + '</span>' +
+          '<span class="meta">' + r.year + '</span>' +
+          '</a>';
+        list.appendChild(li);
+      });
+    }
+    function filter(q, idx) {
+      q = q.trim().toLowerCase();
+      if (!q) { list.classList.add('hidden'); empty.classList.add('hidden'); return; }
+      var terms = q.split(/\s+/);
+      var hits = idx.filter(function (r) {
+        var t = r.title.toLowerCase();
+        return terms.every(function (term) { return t.indexOf(term) !== -1; });
+      });
+      render(hits);
+    }
+    if (input) {
+      input.addEventListener('input', function () {
+        loadIndex().then(function (idx) { filter(input.value, idx); });
+      });
+      input.focus();
+    }
+  })();
+</script>
