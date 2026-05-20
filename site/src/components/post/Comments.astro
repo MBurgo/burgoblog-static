@@ -1,0 +1,77 @@
+---
+// Render flat list of WordPress comments below the post body.
+// Comments are loaded by post slug from src/content/comments/<slug>.json.
+import { getEntry } from 'astro:content';
+import MaskingTape from './MaskingTape.astro';
+
+interface Props {
+  slug: string;
+}
+
+const { slug } = Astro.props;
+const entry = await getEntry('comments', slug);
+const comments = entry?.data ?? [];
+
+const MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+function fmtDate(iso: string): string {
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return iso;
+  return `${MONTHS[d.getMonth()]} · ${String(d.getDate()).padStart(2,'0')} · ${d.getFullYear()}`;
+}
+
+// Decode the most common HTML entities at the layout level so source files
+// remain verbatim — see Task 3 brief item 9.
+function decode(s: string): string {
+  return s
+    .replace(/&#8217;/g, '’')
+    .replace(/&#8216;/g, '‘')
+    .replace(/&#8220;/g, '“')
+    .replace(/&#8221;/g, '”')
+    .replace(/&#8211;/g, '–')
+    .replace(/&#8212;/g, '—')
+    .replace(/&#8230;/g, '…')
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>');
+}
+
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+// Convert a plain-text body (with paragraph breaks) into safe HTML paragraphs.
+function bodyToHtml(raw: string): string {
+  const decoded = decode(raw);
+  const paragraphs = decoded.split(/\n{2,}/).map((p) => p.trim()).filter(Boolean);
+  return paragraphs.map((p) => '<p>' + escapeHtml(p).replace(/\n/g, '<br/>') + '</p>').join('');
+}
+---
+
+{comments.length > 0 && (
+  <div class="space-y-5 mt-6">
+    {comments.map((c, i) => (
+      <article
+        class="relative bg-paper-2 p-6"
+        style="box-shadow:inset 0 0 0 1px rgba(0,0,0,.08);"
+      >
+        {i === 0 && (
+          <div class="absolute -top-3 left-8"><MaskingTape width={120} height={26} rotate={-3} /></div>
+        )}
+        <div class="flex items-baseline justify-between flex-wrap gap-2 mb-2">
+          <div class="font-display text-2xl leading-none" style="letter-spacing:-0.01em;">
+            {decode(c.author || 'Anonymous')}
+          </div>
+          <div class="font-mono text-[10.5px] tracking-track text-ink-3 uppercase">
+            {fmtDate(c.date)}
+          </div>
+        </div>
+        <div class="prose-comment font-serif text-[16.5px] leading-[1.55] text-ink-2" set:html={bodyToHtml(c.body)} />
+      </article>
+    ))}
+  </div>
+)}

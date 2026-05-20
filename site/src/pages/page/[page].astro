@@ -16,6 +16,11 @@ const { page } = Astro.props;
 if (page.currentPage === 1) {
   return Astro.redirect('/');
 }
+
+// Rewrite the prev URL for page 2 so "← NEWER POSTS" lands on the homepage
+// directly instead of bouncing through the /page/1/ redirect.
+const prevUrl = page.currentPage === 2 ? '/' : (page.url.prev ?? undefined);
+const nextUrl = page.url.next ?? undefined;
 ---
 
 <Archive
@@ -27,7 +32,7 @@ if (page.currentPage === 1) {
   <Pagination
     currentPage={page.currentPage}
     lastPage={page.lastPage}
-    prevUrl={page.url.prev ?? undefined}
-    nextUrl={page.url.next ?? undefined}
+    prevUrl={prevUrl}
+    nextUrl={nextUrl}
   />
 </Archive>

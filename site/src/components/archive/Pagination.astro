@@ -26,25 +26,27 @@ if (showRightEllipsis) pageList.push('...');
 if (lastPage > 1) pageList.push(lastPage);
 ---
 
-<nav aria-label="Pagination" class="flex justify-between items-center mt-6 font-mono text-xs tracking-track">
+<nav aria-label="Pagination" class="flex justify-between items-center mt-6 font-mono text-xs tracking-track text-ink">
   <a
     href={prevUrl ?? '#'}
     class:list={[
       'inline-flex items-center justify-center min-w-[44px] min-h-[44px] px-3.5 py-2.5',
-      prevUrl ? 'text-ink-3 hover:text-ink' : 'text-ink-3 opacity-30 pointer-events-none',
+      prevUrl ? 'text-ink-2 hover:text-oxblood' : 'text-ink-3 opacity-30 pointer-events-none',
     ]}
     aria-disabled={prevUrl ? undefined : 'true'}
   >← NEWER POSTS</a>
   <span class="flex gap-1 flex-wrap justify-center">
     {pageList.map((n) =>
       n === '...' ? (
-        <span class="inline-flex items-center justify-center min-w-[44px] min-h-[44px] px-3.5 py-2.5" aria-hidden="true">…</span>
+        <span class="inline-flex items-center justify-center min-w-[44px] min-h-[44px] px-3.5 py-2.5 text-ink-3" aria-hidden="true">…</span>
       ) : (
         <a
           href={pageUrl(n)}
           class:list={[
             'inline-flex items-center justify-center min-w-[44px] min-h-[44px] px-3.5 py-2.5',
-            n === currentPage ? 'bg-ink text-paper' : '',
+            n === currentPage
+              ? 'bg-ink text-paper'
+              : 'text-ink hover:bg-paper-3',
           ]}
           aria-current={n === currentPage ? 'page' : undefined}
         >{String(n).padStart(2, '0')}</a>
