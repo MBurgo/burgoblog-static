@@ -223,3 +223,31 @@ Each entry lists the post and every broken image reference under it.
 ### `2012-02-15-pete-yorn-surfer-girl-cover.md`
 - `/wp-content/uploads/Pete-Yorn.jpg` (featured_image)
 - `/wp-content/uploads/Pete-Yorn.jpg` (md)
+
+## Recovery run
+
+Ran `scripts/recover-images.mjs` on 2026-05-20.
+
+- Recovered from burgoblog.com: **69**
+- Recovered from Wayback Machine: **1**
+- Stripped from source (widget gifs): **3** (see widget-strip commit)
+- Still broken: **11**
+- Bytes downloaded: 2.81 MB / 50 MB cap
+
+### Still broken
+
+- `/files/2007/11/finetunecom.jpg` (2007-09-21-finetune-my-new-friend.md) — burgoblog 404; no Wayback snapshot
+- `/files/2007/10/radiohead.jpg` (2007-10-10-in-rainbows-arrived.md) — burgoblog 404; no Wayback snapshot
+- `/files/2007/10/lucky_dube_500.jpg` (2007-10-26-rip-lucky-dube.md) — burgoblog 404; no Wayback snapshot
+- `/files/2007/11/project-playlist.jpg` (2007-11-06-projectplaylistcom.md) — burgoblog 404; no Wayback snapshot
+- `/files/2007/11/gibson-robot-guitar_1.jpg` (2007-11-13-gibsons-robot-guitar.md) — burgoblog 404; no Wayback snapshot
+- `/files/2007/11/gibson-robot-guitar2.jpg` (2007-11-13-gibsons-robot-guitar.md) — burgoblog 404; no Wayback snapshot
+- `/files/2007/11/sr_press_pic_2edit.jpg` (2007-11-19-state-radio-come-to-australia.md) — burgoblog 404; no Wayback snapshot
+- `/files/2007/11/dennen.jpg` (2007-11-23-brett-dennen-aint-no-reason.md) — burgoblog 404; no Wayback snapshot
+- `/wp-content/uploads/2009/01/centurycoversmall1.jpg` (2009-02-02-new-damnwells-record-one-last-century.md) — burgoblog 403; no Wayback snapshot
+- `/wp-content/uploads/Frightened-Rabbit.jpg` (2011-08-01-new-frightened-rabbit-fuck-this-place-stream.md) — burgoblog 403; no Wayback snapshot
+- `/wp-content/uploads/Pete-Yorn.jpg` (2012-02-15-pete-yorn-surfer-girl-cover.md) — burgoblog 403; no Wayback snapshot
+
+### Wayback recoveries
+
+- `/wp-content/tweak.JPG` ← http://web.archive.org/web/20200809215329if_/http://www.burgoblog.com/wp-content/tweak.JPG
