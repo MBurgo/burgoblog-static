@@ -1,0 +1,49 @@
+---
+// Faux record sleeve — used for post hero artwork on the homepage list,
+// and for inline "NO. 01" track callouts inside posts.
+interface Props {
+  size?: number;
+  label?: string;
+  sub?: string;
+  tone?: 'rust' | 'cream' | 'ink' | 'mustard' | 'olive';
+}
+const { size = 220, label = 'COVER ART', sub = '12" LP · 33⅓ RPM', tone = 'rust' } = Astro.props;
+
+const tones: Record<string, { bg: string; ink: string; accent: string }> = {
+  rust: { bg: '#8a2a1c', ink: '#f3ead6', accent: '#f2d26b' },
+  cream: { bg: '#e9d9b3', ink: '#1a140c', accent: '#8a2a1c' },
+  ink: { bg: '#1a140c', ink: '#f3ead6', accent: '#c58a2e' },
+  mustard: { bg: '#c58a2e', ink: '#1a140c', accent: '#1a140c' },
+  olive: { bg: '#5e6b3a', ink: '#f3ead6', accent: '#e9d9b3' },
+};
+const t = tones[tone] ?? tones.rust;
+const bandFontSize = Math.max(8, size * 0.045);
+const titleFontSize = Math.max(14, size * 0.11);
+---
+
+<div
+  class="relative overflow-hidden font-mono"
+  style={`width:${size}px;height:${size}px;background:${t.bg};color:${t.ink};box-shadow:0 10px 22px rgba(20,15,8,.25), inset 0 0 0 1px rgba(0,0,0,.18);`}
+  aria-hidden="true"
+>
+  <svg viewBox="0 0 100 100" class="absolute inset-0 h-full w-full" preserveAspectRatio="none">
+    <g fill="none" stroke={t.ink} stroke-width="0.15" opacity="0.25">
+      <circle cx="50" cy="58" r="32" />
+      <circle cx="50" cy="58" r="26" />
+      <circle cx="50" cy="58" r="20" />
+      <circle cx="50" cy="58" r="14" />
+    </g>
+    <circle cx="50" cy="58" r="6" fill={t.accent} opacity="0.9" />
+    <circle cx="50" cy="58" r="1.2" fill={t.bg} />
+  </svg>
+  <div
+    class="absolute top-3 left-3 right-3 py-1.5 flex justify-between font-bold uppercase"
+    style={`border-top:1px solid ${t.ink}55;border-bottom:1px solid ${t.ink}55;font-size:${bandFontSize}px;letter-spacing:0.18em;`}
+  >
+    <span>SIDE A</span><span>{sub}</span>
+  </div>
+  <div
+    class="absolute bottom-3 left-3 right-3 leading-none uppercase font-display"
+    style={`font-size:${titleFontSize}px;letter-spacing:-0.01em;`}
+  >{label}</div>
+</div>

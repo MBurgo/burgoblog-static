@@ -1,0 +1,36 @@
+---
+// Homepage / archive masthead. Big "Burgo's music blog." wordmark on the
+// left, a single oxblood stamp + meta stack on the right.
+import Stamp from '../ui/Stamp.astro';
+
+interface Props {
+  postCount: number;
+  yearsRunning: number;
+  lastUpdated?: string;
+  issueNumber?: number;
+}
+const { postCount, yearsRunning, lastUpdated, issueNumber } = Astro.props;
+const stampNumber = issueNumber ?? yearsRunning;
+---
+
+<header class="relative px-4 md:px-14 pt-10 md:pt-13 pb-5">
+  <div class="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-10 items-end">
+    <div>
+      <div class="kicker tracking-eyebrow">A MUSIC BLOG · BY BURGO</div>
+      <h1 class="font-display text-[clamp(48px,8vw,84px)] text-ink mt-2" style="line-height:0.92;letter-spacing:-0.025em;">
+        Burgo's <span class="font-serif italic text-oxblood" style="font-weight:600;">music</span> blog.
+      </h1>
+      <p class="font-serif italic text-[clamp(16px,2vw,22px)] text-ink-2 mt-2.5 max-w-[720px]">
+        &ldquo;It's a wonderful life, this life of music.&rdquo;
+      </p>
+    </div>
+    <div class="hidden md:flex flex-col items-end gap-4">
+      <Stamp size={150} top="BURGO · MUSIC · BLOG" center={`NO.\n${stampNumber}`} rotate={-7} />
+      <div class="meta text-right leading-[1.7]">
+        POSTS / {postCount}<br />
+        YEARS RUNNING / {yearsRunning}<br />
+        {lastUpdated && <Fragment>LAST UPDATED / {lastUpdated}</Fragment>}
+      </div>
+    </div>
+  </div>
+</header>

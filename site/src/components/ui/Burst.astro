@@ -1,0 +1,39 @@
+---
+// Cut-from-the-corner zine star. Useful for "NEW!" / "LATE!" callouts.
+interface Props {
+  size?: number;
+  label?: string;
+  color?: string;
+  rotate?: number;
+}
+const { size = 100, label = 'NEW!', color = '#8a2a1c', rotate = -10 } = Astro.props;
+
+const points = 12;
+const cx = size / 2;
+const cy = size / 2;
+const outer = size / 2 - 2;
+const inner = outer * 0.78;
+const pts = Array.from({ length: points * 2 }, (_, i) => {
+  const a = (i / (points * 2)) * Math.PI * 2 - Math.PI / 2;
+  const radius = i % 2 === 0 ? outer : inner;
+  return `${cx + Math.cos(a) * radius},${cy + Math.sin(a) * radius}`;
+}).join(' ');
+---
+
+<div
+  class="inline-block"
+  style={`width:${size}px;height:${size}px;transform:rotate(${rotate}deg);`}
+  aria-hidden="true"
+>
+  <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size}>
+    <polygon points={pts} fill={color} />
+    <text
+      x={cx}
+      y={cy + size * 0.05}
+      text-anchor="middle"
+      font-family="DM Serif Display, serif"
+      font-size={size * 0.22}
+      fill="#f3ead6"
+    >{label}</text>
+  </svg>
+</div>

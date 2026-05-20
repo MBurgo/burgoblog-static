@@ -1,0 +1,69 @@
+---
+// Round ink stamp. Curved label on top arc, big centred wordmark.
+// Each stamp gets a unique filter/path id so multiple stamps on a
+// page don't share displacement noise.
+interface Props {
+  size?: number;
+  top?: string;
+  center?: string;
+  rotate?: number;
+  color?: string;
+}
+const {
+  size = 110,
+  top = 'BURGO · MUSIC · BLOG',
+  center = 'EST.\n2007',
+  rotate = -6,
+  color = '#8a2a1c',
+} = Astro.props;
+
+const r = size / 2;
+const uid = `stamp-${Math.random().toString(36).slice(2, 9)}`;
+const arcId = `${uid}-arc`;
+const filterId = `${uid}-ink`;
+const lines = center.split('\n');
+---
+
+<div
+  class="inline-block"
+  style={`width:${size}px;height:${size}px;transform:rotate(${rotate}deg);filter:contrast(1.05);`}
+  aria-hidden="true"
+>
+  <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size} style="display:block">
+    <defs>
+      <path
+        id={arcId}
+        d={`M ${r} ${r} m -${r - 12} 0 a ${r - 12} ${r - 12} 0 1 1 ${(r - 12) * 2} 0 a ${r - 12} ${r - 12} 0 1 1 -${(r - 12) * 2} 0`}
+      />
+      <filter id={filterId}>
+        <feTurbulence baseFrequency="0.7" numOctaves="2" seed="3" />
+        <feDisplacementMap in="SourceGraphic" scale="1.4" />
+      </filter>
+    </defs>
+    <g filter={`url(#${filterId})`} fill="none" stroke={color} opacity="0.85">
+      <circle cx={r} cy={r} r={r - 4} stroke-width="2.5" />
+      <circle cx={r} cy={r} r={r - 12} stroke-width="1" />
+    </g>
+    <text
+      fill={color}
+      font-family="JetBrains Mono, monospace"
+      font-size={size * 0.085}
+      font-weight="700"
+      letter-spacing="2"
+      opacity="0.85"
+    >
+      <textPath href={`#${arcId}`} startOffset="50%" text-anchor="middle">{top}</textPath>
+    </text>
+    {lines.map((line, i) => (
+      <text
+        x={r}
+        y={r + (i - (lines.length - 1) / 2) * size * 0.18 + size * 0.06}
+        text-anchor="middle"
+        font-family="DM Serif Display, serif"
+        font-size={size * (lines.length === 1 ? 0.22 : 0.2)}
+        fill={color}
+        opacity="0.9"
+      >{line}</text>
+    ))}
+  </svg>
+</div>

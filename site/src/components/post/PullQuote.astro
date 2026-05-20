@@ -1,0 +1,13 @@
+---
+interface Props {
+  label?: string;
+}
+const { label = 'PULL QUOTE' } = Astro.props;
+---
+
+<blockquote class="relative my-9 py-7 px-9 border-t-[1.5px] border-b-[1.5px] border-ink text-center font-display leading-tight text-ink"
+  style="font-size:2.5rem;letter-spacing:-0.02em;"
+>
+  <span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-paper px-3.5 font-mono text-[10.5px] tracking-kicker text-oxblood">{label}</span>
+  <slot />
+</blockquote>

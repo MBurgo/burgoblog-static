@@ -1,0 +1,18 @@
+---
+interface Props {
+  color?: string;
+  dashed?: boolean;
+  thick?: number;
+  class?: string;
+}
+const { color = '#1a140c', dashed = false, thick = 1, class: className = '' } = Astro.props;
+const bg = dashed
+  ? `repeating-linear-gradient(90deg, ${color} 0 6px, transparent 6px 12px)`
+  : color;
+---
+
+<div
+  class:list={['w-full opacity-85', className]}
+  style={`height:${thick}px;background:${bg};`}
+  role="separator"
+></div>

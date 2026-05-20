@@ -1,0 +1,19 @@
+---
+// Pair of small-caps lead-in + display title for section headers.
+interface Props {
+  eyebrow: string;
+  title: string;
+  meta?: string;
+  size?: 'lg' | 'md';
+}
+const { eyebrow, title, meta, size = 'lg' } = Astro.props;
+const titleClass = size === 'lg' ? 'text-4xl' : 'text-3xl';
+---
+
+<div class="flex items-baseline justify-between mb-5 gap-4 flex-wrap">
+  <div class="flex items-baseline gap-4 flex-wrap">
+    <span class="kicker">{eyebrow}</span>
+    <span class={`font-display leading-none text-ink ${titleClass}`}>{title}</span>
+  </div>
+  {meta && <span class="meta">{meta}</span>}
+</div>

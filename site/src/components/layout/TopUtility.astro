@@ -1,0 +1,41 @@
+---
+// The "newspaper edition" strip across the very top of every page.
+// EST. line on the left, volume / RSS / search on the right.
+interface Props {
+  compact?: boolean;
+}
+const { compact = false } = Astro.props;
+const year = new Date().getFullYear();
+const yearsRunning = year - 2007 + 1;
+---
+
+<div class="relative border-b border-ink">
+  <div class="flex items-center justify-between font-mono text-[11px] tracking-kicker text-ink-2 px-4 md:px-14">
+    {!compact && (
+      <span class="py-3.5 hidden sm:inline">EST. MMVII &nbsp;·&nbsp; BRISBANE, AUS</span>
+    )}
+    {compact && (
+      <a href="/" class="py-3.5 inline-flex items-center gap-3">
+        <span class="font-display italic text-[22px] tracking-tight text-ink not-italic md:italic">Burgo's</span>
+        <span class="border-l border-ink-3 pl-3 hidden sm:inline">BACK TO THE INDEX ←</span>
+      </a>
+    )}
+    <span class="flex items-center">
+      <span class="py-3.5 pr-2 hidden md:inline">VOL. {yearsRunning} &nbsp;/&nbsp; ISS. 04</span>
+      <a href="/feed/" aria-label="Subscribe by RSS"
+         class="inline-flex items-center gap-2 px-4 py-3.5 border-l border-ink-3 hover:text-ink min-h-[44px] box-border">
+        <span class="w-2.5 h-2.5 rounded-full bg-oxblood inline-block"></span>
+        <span class="hidden md:inline">SUBSCRIBE BY RSS</span>
+        <span class="md:hidden">RSS</span>
+      </a>
+      <button type="button" aria-label="Search posts"
+              class="inline-flex items-center gap-2 px-4 py-3.5 hover:text-ink min-h-[44px] box-border">
+        <span>SEARCH</span>
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">
+          <circle cx="6" cy="6" r="4.5" />
+          <line x1="9.5" y1="9.5" x2="13" y2="13" />
+        </svg>
+      </button>
+    </span>
+  </div>
+</div>

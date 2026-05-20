@@ -1,0 +1,19 @@
+---
+// Solid-ink CTA with the oxblood offset shadow. Press it to "click into place".
+interface Props {
+  href?: string;
+  ariaLabel?: string;
+  class?: string;
+}
+const { href, ariaLabel, class: className = '' } = Astro.props;
+const Tag = href ? 'a' : 'button';
+---
+
+<Tag
+  href={href}
+  type={href ? undefined : 'button'}
+  aria-label={ariaLabel}
+  class:list={['cta', className]}
+>
+  <slot />
+</Tag>
