@@ -40,9 +40,13 @@ const canonical = new URL(Astro.url.pathname, Astro.site).toString();
   <body class={bodyClass}>
     <a href="#main" class="skip-link">SKIP TO CONTENT</a>
     {paper && (
-      <div class="relative min-h-screen overflow-hidden">
-        <PaperBg />
-        <slot />
+      <div class="relative min-h-screen overflow-hidden" style="isolation:isolate;">
+        <div class="paper-bg" aria-hidden="true">
+          <PaperBg />
+        </div>
+        <div class="relative" style="z-index:1;">
+          <slot />
+        </div>
       </div>
     )}
     {!paper && <slot />}

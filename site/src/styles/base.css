@@ -53,6 +53,22 @@
 }
 
 @layer components {
+  /* Decorative paper-texture layer. Sits absolutely behind the slot
+     content inside an `isolation: isolate` wrapper so its opaque rect
+     can't paint on top of non-positioned descendants of the wrapper.
+     The previous setup left PaperBg as a positioned sibling with no
+     z-index — per CSS painting order, positioned descendants with
+     z-index: auto paint AFTER non-positioned descendants in the same
+     stacking context, which left text-only blocks (pagination links,
+     post-row dek and metadata text) painted underneath the paper rect
+     and visually invisible even though the DOM was correct. */
+  .paper-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+  }
+
   /* Skip link — first focusable on tab. */
   .skip-link {
     @apply absolute top-2 left-2 px-4 py-2 bg-ink text-paper font-mono text-xs tracking-track no-underline z-50;
