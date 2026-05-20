@@ -19,18 +19,16 @@ const lastYear = years[years.length - 1]?.year ?? new Date().getFullYear();
 
 // Precompute spine geometry up here — keeps the JSX expression block
 // below free of `<=`/`>=` which the Astro template parser dislikes.
+// `popPin` flags which edge the popover should hug so the first/last
+// spines' popovers don't clip — see .vault-pop--{left,right,center} below.
 const spines = years.map((y, idx) => {
   const height = 90 + Math.log(y.count + 1) * 30;
   const color = PALETTE[y.year % PALETTE.length];
   const onLight = LIGHT_TONES.has(color);
-  const pinLeft = idx < 2;
-  const pinRight = idx > years.length - 3;
-  const popClass = pinLeft
-    ? 'left-0'
-    : pinRight
-    ? 'right-0 left-auto'
-    : 'left-1/2 -translate-x-1/2';
-  return { y, height, color, onLight, popClass };
+  let popPin: 'left' | 'right' | 'center' = 'center';
+  if (idx < 2) popPin = 'left';
+  else if (idx > years.length - 3) popPin = 'right';
+  return { y, height, color, onLight, popPin };
 });
 ---
 
@@ -44,18 +42,18 @@ const spines = years.map((y, idx) => {
   </div>
 
   <div class="vault-shelf flex items-end gap-2 px-6 py-7 bg-paper-2 border-b-[6px] border-ink overflow-x-auto md:overflow-visible">
-    {spines.map(({ y, height, color, onLight, popClass }) => (
+    {spines.map(({ y, height, color, onLight, popPin }) => (
         <a
           href={`/archive/${y.year}/`}
-          class="vault-spine relative flex-1 min-w-[40px] flex flex-col items-center gap-2"
+          class="vault-spine flex-1 min-w-[40px] flex flex-col items-center gap-2"
           aria-label={`${y.year} archive — ${y.count} ${y.count === 1 ? 'post' : 'posts'}`}
         >
           <span class="font-mono text-[10px] tracking-track text-ink-3">{y.count} {y.count === 1 ? 'post' : 'posts'}</span>
           <span
-            class="vault-spine__body w-full relative flex items-center justify-center font-display text-2xl md:text-3xl"
+            class="vault-spine__body w-full flex items-center justify-center font-display text-2xl md:text-3xl"
             style={`height:${height}px;background:${color};color:${onLight ? '#1a140c' : '#f3ead6'};writing-mode:vertical-rl;text-orientation:mixed;letter-spacing:0.04em;box-shadow:inset 0 0 0 1px rgba(0,0,0,.25), 0 4px 10px rgba(0,0,0,.15);`}
           >{y.year}</span>
-          <span class={`vault-pop absolute bottom-full mb-3.5 min-w-[260px] max-w-[300px] p-4 bg-paper text-ink ${popClass}`} role="tooltip">
+          <span class={`vault-pop vault-pop--${popPin} p-4 bg-paper text-ink`} role="tooltip">
             <span class="vault-pop__head flex justify-between items-baseline pb-2 mb-2.5 border-b border-ink font-mono text-[10.5px] tracking-kicker text-ink-3">
               <span class="font-display text-3xl leading-none text-ink" style="letter-spacing:-0.01em;">{y.year}</span>
               <span>{y.count} {y.count === 1 ? 'POST' : 'POSTS'}</span>
@@ -79,8 +77,20 @@ const spines = years.map((y, idx) => {
   </div>
 </section>
 
-<style>
+<style is:global>
+  /* Vault — record-spine shelf with on-hover popovers. Styles are global so
+     they're written verbatim into the CSS bundle (the previous scoped block
+     emitted only as an inlined chunk in the homepage <head> and the
+     popovers ended up taking layout space at viewport widths where the
+     transform-stack didn't kick in). `visibility: hidden` guarantees the
+     popover contributes nothing to layout at rest, regardless of stacking
+     context. */
+  .vault-spine {
+    position: relative;
+    text-decoration: none;
+  }
   .vault-spine__body {
+    position: relative;
     transition: transform 0.18s cubic-bezier(0.2, 0.7, 0.3, 1), box-shadow 0.18s;
   }
   .vault-spine:hover .vault-spine__body,
@@ -89,12 +99,34 @@ const spines = years.map((y, idx) => {
     box-shadow: inset 0 0 0 1px rgba(0,0,0,.3), 0 14px 22px rgba(20,15,8,.3);
   }
   .vault-pop {
+    position: absolute;
+    bottom: 100%;
+    margin-bottom: 14px;
+    min-width: 260px;
+    max-width: 300px;
     box-shadow: 0 18px 30px rgba(20,15,8,.25), inset 0 0 0 1.5px var(--ink);
     opacity: 0;
+    visibility: hidden;
     pointer-events: none;
-    transform: translate(var(--tw-translate-x, 0), 6px);
-    transition: opacity 0.15s, transform 0.18s cubic-bezier(0.2, 0.7, 0.3, 1);
+    transition:
+      opacity 0.15s,
+      transform 0.18s cubic-bezier(0.2, 0.7, 0.3, 1),
+      visibility 0s linear 0.15s;
     z-index: 4;
+  }
+  .vault-pop--left {
+    left: 0;
+    right: auto;
+    transform: translateY(6px);
+  }
+  .vault-pop--right {
+    right: 0;
+    left: auto;
+    transform: translateY(6px);
+  }
+  .vault-pop--center {
+    left: 50%;
+    transform: translate(-50%, 6px);
   }
   .vault-pop::after {
     content: '';
@@ -110,7 +142,21 @@ const spines = years.map((y, idx) => {
   .vault-spine:hover .vault-pop,
   .vault-spine:focus-visible .vault-pop {
     opacity: 1;
-    transform: translate(var(--tw-translate-x, 0), 0);
+    visibility: visible;
     pointer-events: auto;
+    transition:
+      opacity 0.15s,
+      transform 0.18s cubic-bezier(0.2, 0.7, 0.3, 1),
+      visibility 0s;
+  }
+  .vault-spine:hover .vault-pop--left,
+  .vault-spine:focus-visible .vault-pop--left,
+  .vault-spine:hover .vault-pop--right,
+  .vault-spine:focus-visible .vault-pop--right {
+    transform: translateY(0);
+  }
+  .vault-spine:hover .vault-pop--center,
+  .vault-spine:focus-visible .vault-pop--center {
+    transform: translate(-50%, 0);
   }
 </style>
