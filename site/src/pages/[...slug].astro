@@ -1,0 +1,23 @@
+---
+// Catch-all for static pages from the pages collection (About, Contact, etc).
+// Posts and other dynamic routes are matched by their more-specific files
+// (e.g. [year]/[month]/[day]/[slug].astro), which Astro prefers over [...slug].
+import Page from '../layouts/Page.astro';
+import { getCollection } from 'astro:content';
+
+export async function getStaticPaths() {
+  const pages = await getCollection('pages');
+  return pages.map((page) => ({
+    // permalink includes leading + trailing slash; strip them for the route param.
+    params: { slug: page.data.permalink.replace(/^\/|\/$/g, '') },
+    props: { page },
+  }));
+}
+
+const { page } = Astro.props;
+const { Content } = await page.render();
+---
+
+<Page title={page.data.title}>
+  <Content />
+</Page>

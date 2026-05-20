@@ -1,0 +1,27 @@
+---
+import type { PostEntry } from '@/lib/data';
+import { formatMetaDate } from '@/lib/data';
+
+interface Props {
+  year: number;
+  posts: PostEntry[];
+}
+const { year, posts } = Astro.props;
+---
+
+<section class="mb-12">
+  <div class="flex items-baseline justify-between border-b-[1.5px] border-ink pb-2 mb-4">
+    <h2 class="font-display text-5xl text-ink m-0" style="letter-spacing:-0.02em;">{year}</h2>
+    <span class="meta">{posts.length} {posts.length === 1 ? 'POST' : 'POSTS'}</span>
+  </div>
+  <ul class="list-none p-0 m-0">
+    {posts.map((post) => (
+      <li class="border-b border-dashed border-rule">
+        <a href={post.data.permalink} class="block py-4 hover:bg-[rgba(20,15,8,0.03)]">
+          <span class="meta block">{formatMetaDate(post.data.date)}</span>
+          <span class="font-display text-2xl md:text-3xl text-ink mt-0.5 block" style="letter-spacing:-0.01em;">{post.data.title}</span>
+        </a>
+      </li>
+    ))}
+  </ul>
+</section>

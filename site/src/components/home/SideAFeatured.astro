@@ -1,0 +1,81 @@
+---
+// "Side A" featured-post block — the magazine-style cover spread at the
+// top of the homepage. Hero artwork on the left, dek + tags + CTA right.
+import AlbumSleeve from '../post/AlbumSleeve.astro';
+import MaskingTape from '../post/MaskingTape.astro';
+import Burst from '../ui/Burst.astro';
+import Button from '../ui/Button.astro';
+import type { PostEntry } from '@/lib/data';
+import { dekFor, formatMetaDate, readMinutes, toneForPost } from '@/lib/data';
+
+interface Props {
+  post: PostEntry;
+  issueNumber?: number;
+}
+const { post, issueNumber } = Astro.props;
+const tone = toneForPost(post);
+const dek = dekFor(post, 320);
+const tags = post.data.tags.slice(0, 8);
+const tone2 = tone === 'ink' ? 'rust' : 'ink';
+---
+
+<section class="relative px-4 md:px-14 pt-9">
+  <div class="flex items-baseline justify-between mb-4">
+    <div class="flex items-baseline gap-4">
+      <span class="kicker">FEATURED</span>
+      <span class="font-display text-3xl md:text-4xl leading-none text-ink">The latest post.</span>
+    </div>
+    <span class="meta hidden sm:inline">NO. 1 OF 1</span>
+  </div>
+
+  <article class="relative grid grid-cols-1 md:grid-cols-[1.3fr_1fr] bg-paper-2"
+           style="box-shadow:0 18px 40px rgba(20,15,8,.15), inset 0 0 0 1px rgba(0,0,0,.06);">
+    <div class="absolute -top-3.5 left-[8%] z-10">
+      <MaskingTape width={180} height={32} rotate={-3} />
+    </div>
+    <div class="absolute -top-2.5 right-[6%] z-10">
+      <MaskingTape width={140} height={28} rotate={4} color="#e9d9b3" />
+    </div>
+    <div class="absolute top-5 right-5 z-20">
+      <Burst size={100} label="NEW!" color="#8a2a1c" rotate={14} />
+    </div>
+
+    <div class="p-6 md:p-9 flex justify-center">
+      <AlbumSleeve
+        size={520}
+        label={post.data.title.toUpperCase()}
+        sub={formatMetaDate(post.data.date)}
+        tone={tone}
+        fluid
+      />
+    </div>
+
+    <div class="p-6 md:py-10 md:pr-11 md:pl-2 flex flex-col">
+      {issueNumber !== undefined && (
+        <div class="kicker">BEST OF · NO. {issueNumber}</div>
+      )}
+      {post.data.categories.length > 0 && (
+        <div class="kicker">{post.data.categories.slice(0, 2).join(' · ').toUpperCase()}</div>
+      )}
+      <h2 class="font-display mt-3 text-[clamp(40px,7vw,72px)]" style="line-height:0.9;letter-spacing:-0.025em;">
+        <a href={post.data.permalink} class="hover:text-oxblood">{post.data.title}</a>
+      </h2>
+      <div class="meta mt-5 flex flex-wrap gap-3">
+        <span>{formatMetaDate(post.data.date)}</span>
+        <span>·</span>
+        <span>BY {post.data.author.toUpperCase()}</span>
+        <span>·</span>
+        <span>{readMinutes(post)} MIN</span>
+      </div>
+      <p class="font-serif text-lg md:text-xl leading-relaxed text-ink-2 mt-4">{dek}</p>
+      {tags.length > 0 && (
+        <div class="mt-5 flex flex-wrap gap-1.5">
+          {tags.map((t) => <a href={`/tag/${t.toLowerCase().replace(/\s+/g, '-')}/`} class="chip">{t}</a>)}
+        </div>
+      )}
+      <Button href={post.data.permalink} class="mt-7 self-start">
+        Read the post <span aria-hidden="true">→</span>
+      </Button>
+    </div>
+  </article>
+</section>

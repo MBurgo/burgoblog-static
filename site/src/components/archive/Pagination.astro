@@ -1,0 +1,62 @@
+---
+// WordPress-style `/page/N/` pagination — newer/older + numbered chips.
+interface Props {
+  currentPage: number;
+  lastPage: number;
+  prevUrl?: string;
+  nextUrl?: string;
+  basePath?: string;
+}
+const { currentPage, lastPage, prevUrl, nextUrl, basePath = '/page' } = Astro.props;
+
+function pageUrl(n: number) {
+  if (n === 1) return '/';
+  return `${basePath}/${n}/`;
+}
+
+const pageList: Array<number | '...'> = [];
+const showLeftEllipsis = currentPage > 3;
+const showRightEllipsis = currentPage < lastPage - 2;
+pageList.push(1);
+if (showLeftEllipsis) pageList.push('...');
+for (let n = Math.max(2, currentPage - 1); n <= Math.min(lastPage - 1, currentPage + 1); n++) {
+  pageList.push(n);
+}
+if (showRightEllipsis) pageList.push('...');
+if (lastPage > 1) pageList.push(lastPage);
+---
+
+<nav aria-label="Pagination" class="flex justify-between items-center mt-6 font-mono text-xs tracking-track">
+  <a
+    href={prevUrl ?? '#'}
+    class:list={[
+      'inline-flex items-center justify-center min-w-[44px] min-h-[44px] px-3.5 py-2.5',
+      prevUrl ? 'text-ink-3 hover:text-ink' : 'text-ink-3 opacity-30 pointer-events-none',
+    ]}
+    aria-disabled={prevUrl ? undefined : 'true'}
+  >← NEWER POSTS</a>
+  <span class="flex gap-1 flex-wrap justify-center">
+    {pageList.map((n) =>
+      n === '...' ? (
+        <span class="inline-flex items-center justify-center min-w-[44px] min-h-[44px] px-3.5 py-2.5" aria-hidden="true">…</span>
+      ) : (
+        <a
+          href={pageUrl(n)}
+          class:list={[
+            'inline-flex items-center justify-center min-w-[44px] min-h-[44px] px-3.5 py-2.5',
+            n === currentPage ? 'bg-ink text-paper' : '',
+          ]}
+          aria-current={n === currentPage ? 'page' : undefined}
+        >{String(n).padStart(2, '0')}</a>
+      ),
+    )}
+  </span>
+  <a
+    href={nextUrl ?? '#'}
+    class:list={[
+      'inline-flex items-center justify-center min-w-[44px] min-h-[44px] px-3.5 py-2.5 font-bold',
+      nextUrl ? 'text-oxblood' : 'text-ink-3 opacity-30 pointer-events-none',
+    ]}
+    aria-disabled={nextUrl ? undefined : 'true'}
+  >OLDER POSTS →</a>
+</nav>

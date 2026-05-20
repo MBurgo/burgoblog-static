@@ -5,9 +5,11 @@ import { defineCollection, z } from 'astro:content';
 
 const posts = defineCollection({
   type: 'content',
+  // Astro reserves `slug` and derives it from the filename, so we don't
+  // declare it here even though Task 1's frontmatter writes it. The
+  // markdown loader ignores unknown frontmatter keys.
   schema: z.object({
     title: z.string(),
-    slug: z.string(),
     date: z.coerce.date(),
     author: z.string().default('Burgo'),
     categories: z.array(z.string()).default([]),
@@ -28,7 +30,6 @@ const pages = defineCollection({
   type: 'content',
   schema: z.object({
     title: z.string(),
-    slug: z.string(),
     permalink: z.string(),
     updated: z.coerce.date().optional(),
   }),

@@ -6,8 +6,11 @@ interface Props {
   label?: string;
   sub?: string;
   tone?: 'rust' | 'cream' | 'ink' | 'mustard' | 'olive';
+  /** When true, the sleeve fluid-fills its parent and uses `size` as a max width.
+   *  Used by the homepage hero where the parent can collapse below 520px. */
+  fluid?: boolean;
 }
-const { size = 220, label = 'COVER ART', sub = '12" LP · 33⅓ RPM', tone = 'rust' } = Astro.props;
+const { size = 220, label = 'COVER ART', sub = '12" LP · 33⅓ RPM', tone = 'rust', fluid = false } = Astro.props;
 
 const tones: Record<string, { bg: string; ink: string; accent: string }> = {
   rust: { bg: '#8a2a1c', ink: '#f3ead6', accent: '#f2d26b' },
@@ -22,8 +25,10 @@ const titleFontSize = Math.max(14, size * 0.11);
 ---
 
 <div
-  class="relative overflow-hidden font-mono"
-  style={`width:${size}px;height:${size}px;background:${t.bg};color:${t.ink};box-shadow:0 10px 22px rgba(20,15,8,.25), inset 0 0 0 1px rgba(0,0,0,.18);`}
+  class:list={['relative overflow-hidden font-mono', fluid ? 'aspect-square w-full' : '']}
+  style={fluid
+    ? `max-width:${size}px;background:${t.bg};color:${t.ink};box-shadow:0 10px 22px rgba(20,15,8,.25), inset 0 0 0 1px rgba(0,0,0,.18);`
+    : `width:${size}px;height:${size}px;background:${t.bg};color:${t.ink};box-shadow:0 10px 22px rgba(20,15,8,.25), inset 0 0 0 1px rgba(0,0,0,.18);`}
   aria-hidden="true"
 >
   <svg viewBox="0 0 100 100" class="absolute inset-0 h-full w-full" preserveAspectRatio="none">

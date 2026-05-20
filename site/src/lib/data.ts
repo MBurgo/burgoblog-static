@@ -66,7 +66,7 @@ const TONE_CYCLE: Tone[] = ['rust', 'cream', 'ink', 'mustard', 'olive'];
 // Stable per-post sleeve colour so re-renders don't shuffle the homepage.
 export function toneForPost(post: PostEntry): Tone {
   if (post.data.sleeveTone) return post.data.sleeveTone;
-  const key = post.data.slug;
+  const key = post.slug;
   let hash = 0;
   for (let i = 0; i < key.length; i++) hash = (hash * 31 + key.charCodeAt(i)) >>> 0;
   return TONE_CYCLE[hash % TONE_CYCLE.length];

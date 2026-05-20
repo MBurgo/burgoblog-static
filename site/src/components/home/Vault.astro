@@ -1,0 +1,116 @@
+---
+// "The Vault" — a row of records standing on a shelf, one per year.
+// Spine heights scale logarithmically with post count so single-post
+// years stay legible while 2008 (the heaviest year) doesn't dwarf them.
+// Hover/focus reveals the year's three highest-commented posts.
+import type { YearGroup } from '@/lib/data';
+
+interface Props {
+  years: YearGroup[];
+  totalPosts: number;
+}
+const { years, totalPosts } = Astro.props;
+
+const PALETTE = ['#8a2a1c', '#1a140c', '#c58a2e', '#5e6b3a', '#e9d9b3', '#3a2f22'];
+const LIGHT_TONES = new Set(['#e9d9b3', '#c58a2e']);
+
+const firstYear = years[0]?.year ?? new Date().getFullYear();
+const lastYear = years[years.length - 1]?.year ?? new Date().getFullYear();
+
+// Precompute spine geometry up here — keeps the JSX expression block
+// below free of `<=`/`>=` which the Astro template parser dislikes.
+const spines = years.map((y, idx) => {
+  const height = 90 + Math.log(y.count + 1) * 30;
+  const color = PALETTE[y.year % PALETTE.length];
+  const onLight = LIGHT_TONES.has(color);
+  const pinLeft = idx < 2;
+  const pinRight = idx > years.length - 3;
+  const popClass = pinLeft
+    ? 'left-0'
+    : pinRight
+    ? 'right-0 left-auto'
+    : 'left-1/2 -translate-x-1/2';
+  return { y, height, color, onLight, popClass };
+});
+---
+
+<section class="relative px-4 md:px-14 pt-16">
+  <div class="flex items-baseline justify-between mb-6 flex-wrap gap-3">
+    <div class="flex items-baseline gap-4 flex-wrap">
+      <span class="kicker">THE VAULT</span>
+      <span class="font-display text-2xl md:text-4xl leading-none">{lastYear - firstYear + 1} years of back catalog.</span>
+    </div>
+    <span class="meta">{firstYear} → {lastYear} · {totalPosts} POSTS</span>
+  </div>
+
+  <div class="vault-shelf flex items-end gap-2 px-6 py-7 bg-paper-2 border-b-[6px] border-ink overflow-x-auto md:overflow-visible">
+    {spines.map(({ y, height, color, onLight, popClass }) => (
+        <a
+          href={`/archive/${y.year}/`}
+          class="vault-spine relative flex-1 min-w-[40px] flex flex-col items-center gap-2"
+          aria-label={`${y.year} archive — ${y.count} ${y.count === 1 ? 'post' : 'posts'}`}
+        >
+          <span class="font-mono text-[10px] tracking-track text-ink-3">{y.count} {y.count === 1 ? 'post' : 'posts'}</span>
+          <span
+            class="vault-spine__body w-full relative flex items-center justify-center font-display text-2xl md:text-3xl"
+            style={`height:${height}px;background:${color};color:${onLight ? '#1a140c' : '#f3ead6'};writing-mode:vertical-rl;text-orientation:mixed;letter-spacing:0.04em;box-shadow:inset 0 0 0 1px rgba(0,0,0,.25), 0 4px 10px rgba(0,0,0,.15);`}
+          >{y.year}</span>
+          <span class={`vault-pop absolute bottom-full mb-3.5 min-w-[260px] max-w-[300px] p-4 bg-paper text-ink ${popClass}`} role="tooltip">
+            <span class="vault-pop__head flex justify-between items-baseline pb-2 mb-2.5 border-b border-ink font-mono text-[10.5px] tracking-kicker text-ink-3">
+              <span class="font-display text-3xl leading-none text-ink" style="letter-spacing:-0.01em;">{y.year}</span>
+              <span>{y.count} {y.count === 1 ? 'POST' : 'POSTS'}</span>
+            </span>
+            <ol class="list-none m-0 p-0 flex flex-col gap-2">
+              {y.top.map((entry, i) => (
+                <li class="grid grid-cols-[22px_1fr] gap-2 items-baseline font-serif text-[15px] leading-snug text-ink">
+                  <span class="font-mono text-[10.5px] tracking-track text-oxblood">{String(i + 1).padStart(2, '0')}</span>
+                  <a href={entry.permalink} class="hover:text-oxblood">{entry.title}</a>
+                </li>
+              ))}
+            </ol>
+            {y.count > y.top.length && (
+              <span class="block mt-3 pt-2.5 border-t border-dashed border-rule font-mono text-[10.5px] tracking-kicker text-oxblood">
+                SEE ALL {y.count} →
+              </span>
+            )}
+          </span>
+        </a>
+      ))}
+  </div>
+</section>
+
+<style>
+  .vault-spine__body {
+    transition: transform 0.18s cubic-bezier(0.2, 0.7, 0.3, 1), box-shadow 0.18s;
+  }
+  .vault-spine:hover .vault-spine__body,
+  .vault-spine:focus-visible .vault-spine__body {
+    transform: translateY(-10px);
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,.3), 0 14px 22px rgba(20,15,8,.3);
+  }
+  .vault-pop {
+    box-shadow: 0 18px 30px rgba(20,15,8,.25), inset 0 0 0 1.5px var(--ink);
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(var(--tw-translate-x, 0), 6px);
+    transition: opacity 0.15s, transform 0.18s cubic-bezier(0.2, 0.7, 0.3, 1);
+    z-index: 4;
+  }
+  .vault-pop::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    width: 14px;
+    height: 14px;
+    background: var(--paper);
+    transform: translate(-50%, -7px) rotate(45deg);
+    box-shadow: 1px 1px 0 0 var(--ink);
+  }
+  .vault-spine:hover .vault-pop,
+  .vault-spine:focus-visible .vault-pop {
+    opacity: 1;
+    transform: translate(var(--tw-translate-x, 0), 0);
+    pointer-events: auto;
+  }
+</style>

@@ -1,0 +1,174 @@
+---
+// Single-post reading view. Compact top bar (no full masthead), breadcrumb,
+// hero, then a 3-column body grid with sticky-ish margin notes on either side.
+import Base from './Base.astro';
+import TopUtility from '../components/layout/TopUtility.astro';
+import Footer from '../components/layout/Footer.astro';
+import Stamp from '../components/ui/Stamp.astro';
+import Burst from '../components/ui/Burst.astro';
+import MaskingTape from '../components/post/MaskingTape.astro';
+import Rule from '../components/ui/Rule.astro';
+import AlbumSleeve from '../components/post/AlbumSleeve.astro';
+import type { PostEntry } from '@/lib/data';
+import { formatMetaDate, readMinutes, toneForPost } from '@/lib/data';
+
+interface Props {
+  post: PostEntry;
+  prev?: PostEntry | null;
+  next?: PostEntry | null;
+}
+const { post, prev = null, next = null } = Astro.props;
+const tone = toneForPost(post);
+const primaryCategory = post.data.categories[0];
+const ogImage = post.data.featured_image ?? undefined;
+---
+
+<Base title={`${post.data.title} · Burgo's Music Blog`} ogImage={ogImage}>
+  <TopUtility compact />
+
+  <div class="relative px-4 md:px-14 pt-10">
+    <nav aria-label="Breadcrumb" class="flex items-center gap-3 flex-wrap font-mono text-[11px] tracking-kicker text-ink-3">
+      <a href="/" class="hover:text-ink">HOME</a>
+      <span>/</span>
+      {primaryCategory && (
+        <Fragment>
+          <a href={`/category/${primaryCategory}/`} class="hover:text-ink uppercase">{primaryCategory.replace(/-/g, ' ')}</a>
+          <span>/</span>
+        </Fragment>
+      )}
+      <span class="text-oxblood">{formatMetaDate(post.data.date)}</span>
+    </nav>
+  </div>
+
+  <article class="relative">
+    <header class="relative px-4 md:px-14 pt-6 pb-12">
+      <div class="grid grid-cols-[80px_1fr_80px] md:grid-cols-[120px_1fr_120px] gap-4 md:gap-6 items-start">
+        <div class="pt-7 hidden sm:block">
+          <Stamp size={90} top="ARCHIVED · ON · DISC" center={String(post.data.date.getFullYear())} rotate={-9} />
+        </div>
+        <h1
+          class="font-display text-center text-[clamp(40px,9vw,120px)] m-0"
+          style="line-height:0.86;letter-spacing:-0.035em;"
+        >{post.data.title}</h1>
+        <div class="pt-9 hidden sm:block justify-self-end">
+          <Burst size={88} label="LATE!" color="#1a140c" rotate={12} />
+        </div>
+      </div>
+
+      <Rule color="#1a140c" thick={1.5} class="mt-8" />
+
+      <div class="grid grid-cols-2 md:grid-cols-4 py-3.5 font-mono text-[11px] tracking-track text-ink-3 border-b-[1.5px] border-ink">
+        <div><span class="text-ink">BY</span> &nbsp; {post.data.author.toUpperCase()}</div>
+        <div><span class="text-ink">FILED</span> &nbsp; {formatMetaDate(post.data.date)}</div>
+        <div><span class="text-ink">RUNTIME</span> &nbsp; ≈ {readMinutes(post)} MIN</div>
+        <div class="text-right">
+          <span class="text-ink">
+            {post.data.comment_count === 0 ? 'NO COMMENTS' : `${post.data.comment_count} COMMENT${post.data.comment_count === 1 ? '' : 'S'}`}
+          </span>
+          {post.data.comment_count === 0 && <Fragment> &nbsp; (YET)</Fragment>}
+        </div>
+      </div>
+    </header>
+
+    {post.data.featured_image ? (
+      <div class="relative px-4 md:px-14">
+        <div class="relative">
+          <img src={post.data.featured_image} alt="" class="w-full h-auto" />
+          <div class="absolute -top-2.5 left-[6%]"><MaskingTape width={180} height={30} rotate={-3} /></div>
+          <div class="absolute -top-2.5 right-[8%]"><MaskingTape width={140} height={26} rotate={4} color="#e9d9b3" /></div>
+        </div>
+      </div>
+    ) : (
+      <div class="relative px-4 md:px-14">
+        <div class="relative flex justify-center py-6">
+          <div class="w-full max-w-[600px] relative">
+            <AlbumSleeve
+              size={600}
+              label={post.data.title.toUpperCase()}
+              sub={formatMetaDate(post.data.date)}
+              tone={tone}
+              fluid
+            />
+            <div class="absolute -top-2.5 left-[8%]"><MaskingTape width={180} height={30} rotate={-3} /></div>
+            <div class="absolute -top-2.5 right-[10%]"><MaskingTape width={140} height={26} rotate={4} color="#e9d9b3" /></div>
+          </div>
+        </div>
+      </div>
+    )}
+
+    <div id="main" class="relative px-4 md:px-14 py-14 grid grid-cols-1 lg:grid-cols-[180px_minmax(0,720px)_180px] gap-8 lg:gap-12 justify-center">
+      <aside class="font-mono text-[10.5px] tracking-track text-ink-3 leading-[1.9] order-2 lg:order-1">
+        <div class="text-oxblood">SHARE</div>
+        <div class="mt-1.5">
+          <a href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(Astro.url.toString())}`} class="block hover:text-ink">X / TWITTER</a>
+          <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(Astro.url.toString())}`} class="block hover:text-ink">FACEBOOK</a>
+          <a href={Astro.url.toString()} class="block hover:text-ink">COPY LINK</a>
+        </div>
+      </aside>
+
+      <div class="prose dropcap order-1 lg:order-2">
+        <slot />
+      </div>
+
+      <aside class="font-mono text-[10.5px] tracking-track text-ink-3 leading-[1.9] order-3">
+        {post.data.tags.length > 0 && (
+          <Fragment>
+            <div class="text-oxblood">TAGGED</div>
+            <div class="flex flex-wrap gap-1.5 mt-2">
+              {post.data.tags.slice(0, 12).map((t) => (
+                <a href={`/tag/${t.toLowerCase().replace(/\s+/g, '-')}/`} class="chip">{t}</a>
+              ))}
+            </div>
+          </Fragment>
+        )}
+      </aside>
+    </div>
+
+    <div class="px-4 md:px-14">
+      <div class="flex justify-center items-center gap-4 my-0 py-5 border-t-[1.5px] border-b-[1.5px] border-ink">
+        <span class="font-mono text-[11px] tracking-eyebrow text-ink-3">END OF SIDE A</span>
+        <span class="w-2 h-2 bg-oxblood inline-block"></span>
+        <span class="font-display italic text-xl md:text-2xl">Flip the record →</span>
+      </div>
+    </div>
+
+    {(prev || next) && (
+      <div class="px-4 md:px-14 pt-9 grid grid-cols-1 md:grid-cols-2 gap-6">
+        {prev && (
+          <a href={prev.data.permalink}
+             class="block bg-paper-2 p-6 hover:bg-paper-3 transition-colors"
+             style="box-shadow:inset 0 0 0 1px rgba(0,0,0,.08);">
+            <div class="kicker">← PREVIOUS POST</div>
+            <div class="font-display text-2xl mt-1.5" style="letter-spacing:-0.01em;line-height:1.1;">{prev.data.title}</div>
+            <div class="meta mt-1.5">{formatMetaDate(prev.data.date)}</div>
+          </a>
+        )}
+        {next && (
+          <a href={next.data.permalink}
+             class="block bg-paper-2 p-6 text-right hover:bg-paper-3 transition-colors"
+             style="box-shadow:inset 0 0 0 1px rgba(0,0,0,.08);">
+            <div class="kicker">NEXT POST →</div>
+            <div class="font-display text-2xl mt-1.5" style="letter-spacing:-0.01em;line-height:1.1;">{next.data.title}</div>
+            <div class="meta mt-1.5">{formatMetaDate(next.data.date)}</div>
+          </a>
+        )}
+      </div>
+    )}
+
+    <section class="px-4 md:px-14 pt-16">
+      <div class="flex items-baseline justify-between mb-4 flex-wrap gap-3">
+        <div class="flex items-baseline gap-4">
+          <span class="kicker">FAN MAIL</span>
+          <span class="font-display text-3xl leading-none">Leave a reply.</span>
+        </div>
+        <span class="meta">{post.data.comment_count} COMMENTS</span>
+      </div>
+      <div class="relative bg-paper-2 p-7" style="box-shadow:inset 0 0 0 1px rgba(0,0,0,.08);">
+        <div class="absolute -top-3 left-8"><MaskingTape width={120} height={26} rotate={-3} /></div>
+        <p class="font-serif italic text-ink-3 m-0">Comments aren't wired up yet — Task 3 will connect the saved comments collection.</p>
+      </div>
+    </section>
+  </article>
+
+  <Footer />
+</Base>

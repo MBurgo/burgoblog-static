@@ -1,0 +1,28 @@
+---
+import Archive from '../../layouts/Archive.astro';
+import ArchiveList from '../../components/archive/ArchiveList.astro';
+import { getSortedPosts, categories } from '@/lib/data';
+
+export async function getStaticPaths() {
+  return categories.map((category) => ({
+    params: { slug: category.slug },
+    props: { category },
+  }));
+}
+
+const { category } = Astro.props;
+const all = await getSortedPosts();
+const posts = all.filter((post) => post.data.categories.includes(category.slug));
+---
+
+<Archive
+  title={category.name}
+  eyebrow="CATEGORY"
+  meta={`${posts.length} ${posts.length === 1 ? 'POST' : 'POSTS'} IN ${category.name.toUpperCase()}`}
+>
+  {posts.length === 0 ? (
+    <p class="font-serif italic text-ink-3">No posts have been migrated into this category yet. Task 3 will bring them across.</p>
+  ) : (
+    <ArchiveList posts={posts} />
+  )}
+</Archive>
