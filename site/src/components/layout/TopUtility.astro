@@ -110,11 +110,17 @@ const yearsRunning = year - 2007 + 1;
       q = q.trim().toLowerCase();
       if (!q) { list.classList.add('hidden'); empty.classList.add('hidden'); return; }
       var terms = q.split(/\s+/);
-      var hits = idx.filter(function (r) {
+      var titleHits = [];
+      var bodyHits = [];
+      idx.forEach(function (r) {
         var t = r.title.toLowerCase();
-        return terms.every(function (term) { return t.indexOf(term) !== -1; });
+        if (terms.every(function (term) { return t.indexOf(term) !== -1; })) {
+          titleHits.push(r);
+        } else if (r.text && terms.every(function (term) { return r.text.indexOf(term) !== -1; })) {
+          bodyHits.push(r);
+        }
       });
-      render(hits);
+      render(titleHits.concat(bodyHits));
     }
 
     function open() {
