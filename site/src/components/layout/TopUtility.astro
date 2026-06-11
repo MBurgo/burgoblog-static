@@ -28,7 +28,8 @@ const yearsRunning = year - 2007 + 1;
         <span class="hidden md:inline">SUBSCRIBE BY RSS</span>
         <span class="md:hidden">RSS</span>
       </a>
-      <button type="button" aria-label="Search posts"
+      <button type="button" id="topsearch-open" aria-label="Search posts"
+              aria-haspopup="dialog" aria-expanded="false" aria-controls="topsearch-overlay"
               class="inline-flex items-center gap-2 px-4 py-3.5 hover:text-ink min-h-[44px] box-border">
         <span>SEARCH</span>
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">
@@ -39,3 +40,118 @@ const yearsRunning = year - 2007 + 1;
     </span>
   </div>
 </div>
+
+<!-- Search overlay — opened by the SEARCH button above. Filters the
+     build-time /search-index.json client-side, same as the 404 page. -->
+<div id="topsearch-overlay" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true" aria-label="Search the archive">
+  <div id="topsearch-backdrop" class="absolute inset-0" style="background:rgba(26,20,12,.45);"></div>
+  <div class="relative bg-paper border-b-2 border-ink px-4 md:px-14 py-8 md:py-10 max-h-[85vh] overflow-y-auto">
+    <div class="max-w-[820px] mx-auto">
+      <div class="flex items-center justify-between mb-2">
+        <label for="topsearch-input" class="kicker">SEARCH THE ARCHIVE</label>
+        <button type="button" id="topsearch-close" aria-label="Close search"
+                class="meta hover:text-ink min-h-[44px] px-2 -mr-2">CLOSE ✕</button>
+      </div>
+      <input
+        id="topsearch-input"
+        type="search"
+        placeholder="artist, album, song…"
+        autocomplete="off"
+        class="w-full bg-paper-2 px-5 py-3.5 font-serif text-lg text-ink"
+        style="box-shadow:inset 0 0 0 1.5px rgba(26,20,12,.85);"
+      />
+      <ul id="topsearch-results" class="mt-6 list-none p-0 m-0 hidden"></ul>
+      <p id="topsearch-empty" class="meta mt-6 hidden">NO MATCHES.</p>
+    </div>
+  </div>
+</div>
+
+<script is:inline>
+  (function () {
+    var openBtn = document.getElementById('topsearch-open');
+    var overlay = document.getElementById('topsearch-overlay');
+    var closeBtn = document.getElementById('topsearch-close');
+    var backdrop = document.getElementById('topsearch-backdrop');
+    var input = document.getElementById('topsearch-input');
+    var list = document.getElementById('topsearch-results');
+    var empty = document.getElementById('topsearch-empty');
+    if (!openBtn || !overlay) return;
+
+    var indexPromise = null;
+    function loadIndex() {
+      if (!indexPromise) {
+        indexPromise = fetch('/search-index.json').then(function (r) { return r.json(); });
+      }
+      return indexPromise;
+    }
+
+    function render(results) {
+      list.innerHTML = '';
+      if (results.length === 0) {
+        list.classList.add('hidden');
+        empty.classList.remove('hidden');
+        return;
+      }
+      empty.classList.add('hidden');
+      list.classList.remove('hidden');
+      results.slice(0, 20).forEach(function (r) {
+        var li = document.createElement('li');
+        li.className = 'py-2 border-b border-ink-3/20';
+        li.innerHTML =
+          '<a href="' + r.permalink + '" class="block hover:text-oxblood">' +
+          '<span class="font-display text-xl block leading-tight">' + r.title.replace(/&/g,'&amp;').replace(/</g,'&lt;') + '</span>' +
+          '<span class="meta">' + r.year + '</span>' +
+          '</a>';
+        list.appendChild(li);
+      });
+    }
+
+    function filter(q, idx) {
+      q = q.trim().toLowerCase();
+      if (!q) { list.classList.add('hidden'); empty.classList.add('hidden'); return; }
+      var terms = q.split(/\s+/);
+      var titleHits = [];
+      var bodyHits = [];
+      idx.forEach(function (r) {
+        var t = r.title.toLowerCase();
+        if (terms.every(function (term) { return t.indexOf(term) !== -1; })) {
+          titleHits.push(r);
+        } else if (r.text && terms.every(function (term) { return r.text.indexOf(term) !== -1; })) {
+          bodyHits.push(r);
+        }
+      });
+      render(titleHits.concat(bodyHits));
+    }
+
+    function open() {
+      overlay.classList.remove('hidden');
+      openBtn.setAttribute('aria-expanded', 'true');
+      document.body.style.overflow = 'hidden';
+      loadIndex();
+      input.focus();
+    }
+
+    function close() {
+      overlay.classList.add('hidden');
+      openBtn.setAttribute('aria-expanded', 'false');
+      document.body.style.overflow = '';
+      openBtn.focus();
+    }
+
+    openBtn.addEventListener('click', open);
+    closeBtn.addEventListener('click', close);
+    backdrop.addEventListener('click', close);
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && !overlay.classList.contains('hidden')) close();
+    });
+    input.addEventListener('input', function () {
+      loadIndex().then(function (idx) { filter(input.value, idx); });
+    });
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') {
+        var first = list.querySelector('a');
+        if (first) window.location.href = first.getAttribute('href');
+      }
+    });
+  })();
+</script>
